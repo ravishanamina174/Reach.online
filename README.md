@@ -426,3 +426,110 @@ Reach.online/
 **WSO2 integration:** Deferred
 
 The central engineering goal is to help developers understand, evaluate, and govern changes to the APIs and tools their AI agents depend on.
+
+
+## Local Development Setup
+
+### Prerequisites
+
+Ensure the following tools are installed:
+
+- Node.js and npm
+- Java 21 (JDK)
+- Git
+- A Neon PostgreSQL account for the cloud database
+
+### Project Structure
+
+```text
+Reach.online/
+├── frontend/                 # Next.js + TypeScript frontend
+├── backend/                  # Spring Boot REST API
+├── .gitignore
+└── README.md
+```
+
+### 1. Configure the Backend
+
+The backend uses Spring Boot, Java 21, Maven Wrapper, and PostgreSQL.
+
+Create a `backend/.env` file with your Neon database credentials:
+
+```properties
+DATABASE_URL=jdbc:postgresql://YOUR_NEON_HOST/YOUR_DATABASE?sslmode=require
+DATABASE_USERNAME=YOUR_NEON_USERNAME
+DATABASE_PASSWORD=YOUR_NEON_PASSWORD
+```
+
+Replace the placeholders with your actual Neon connection details. Never commit real credentials to GitHub.
+
+Start the backend:
+
+```bash
+cd backend
+./mvnw spring-boot:run
+```
+
+The API runs on `http://localhost:8080` by default.
+
+**Health endpoints:**
+
+- `GET /api/health` — application health response
+- `GET /actuator/health` — Spring Boot Actuator health status
+
+### 2. Configure the Frontend
+
+Create `frontend/.env.local`:
+
+```properties
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
+```
+
+Start the frontend in a separate terminal:
+
+```bash
+cd frontend
+npm run dev
+```
+
+Open `http://localhost:3000` in your browser.
+
+### 3. Run Tests and Build Checks
+
+**Backend tests:**
+
+```bash
+cd backend
+./mvnw test
+```
+
+**Frontend production build:**
+
+```bash
+cd frontend
+npm run build
+```
+
+The backend tests use an in-memory H2 database where configured for tests. The application uses Neon PostgreSQL for its configured runtime database.
+
+### Environment Variables and Security
+
+- Keep `backend/.env` and `frontend/.env.local` out of version control.
+- Use `.env.example` files to document required environment variable names without real credentials.
+- Never expose database passwords, API keys, or other secrets in source code.
+- Variables prefixed with `NEXT_PUBLIC_` are exposed to the browser and must not contain secrets.
+
+### Current Foundation Status
+
+- [x] Next.js frontend initialized
+- [x] Spring Boot backend initialized
+- [x] Java 21 configured for backend development
+- [x] Backend tests passing
+- [x] Frontend production build passing
+- [x] Neon PostgreSQL connection verified
+- [x] Environment secrets excluded from Git
+- [x] Initial foundation changes committed and pushed
+
+### Next Development Phase
+
+The next phase will establish the core application structure, API conventions, database migrations, and initial domain models for contract management, agent/tool registration, dependency tracking, and governance policies.

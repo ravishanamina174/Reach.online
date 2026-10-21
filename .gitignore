@@ -1,0 +1,25 @@
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+!.env.*.example
+backend/.env.example
+
+# Node.js and Next.js
+node_modules/
+.next/
+out/
+dist/
+coverage/
+.turbo/
+
+# Java and Maven
+target/
+.mvn/wrapper/maven-wrapper.jar
+
+# IDE and operating system
+.idea/
+.DS_Store
+
+# Logs
+*.log
