@@ -8,8 +8,11 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
+import java.util.Map;
 
 import java.time.Instant;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 @RestControllerAdvice
@@ -61,6 +64,27 @@ public class GlobalExceptionHandler {
                 List.of()
         );
     }
+
+     @ExceptionHandler(ResponseStatusException.class)
+public ResponseEntity<Map<String, Object>> handleResponseStatusException(
+        ResponseStatusException ex,
+        HttpServletRequest request
+) {
+    int status = ex.getStatusCode().value();
+
+    Map<String, Object> body = new LinkedHashMap<>();
+    body.put("timestamp", Instant.now());
+    body.put("status", status);
+    body.put("error", HttpStatus.valueOf(status).getReasonPhrase());
+    body.put("message", ex.getReason() != null
+            ? ex.getReason()
+            : "Request failed");
+    body.put("path", request.getRequestURI());
+    body.put("details", List.of());
+
+    return ResponseEntity.status(status).body(body);
+}
+
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleUnexpected(
