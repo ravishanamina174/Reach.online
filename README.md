@@ -533,3 +533,49 @@ The backend tests use an in-memory H2 database where configured for tests. The a
 ### Next Development Phase
 
 The next phase will establish the core application structure, API conventions, database migrations, and initial domain models for contract management, agent/tool registration, dependency tracking, and governance policies.
+
+
+## Phase 1 — Core Backend Architecture
+
+### Architecture
+
+Reach.Online uses a modular-monolith architecture built with Java 21 and Spring Boot. Business responsibilities are separated into modules while running in a single backend application.
+
+- `common/` — shared API responses and exception handling
+- `contract/` — API contract storage and comparison foundations
+- `registry/` — AI agent and tool registration
+- `dependency/` — agent-to-tool relationships and consumer expectations
+- `governance/` — governance policy foundations
+- `review/` — release review foundations
+
+### Database Migrations
+
+Flyway manages the PostgreSQL schema. Versioned migration scripts are stored under:
+
+`backend/src/main/resources/db/migration/`
+
+The initial migration creates tables for agents, tools, contracts, agent-tool dependencies, governance policies, and release reviews.
+
+Hibernate uses schema validation rather than automatically changing the database schema.
+
+### Initial Registry API
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/registry/agents` | List agents |
+| POST | `/api/registry/agents` | Register an agent |
+| GET | `/api/registry/tools` | List tools |
+| POST | `/api/registry/tools` | Register a tool |
+
+Successful registry responses contain `data` and `timestamp`. Errors contain a timestamp, HTTP status, message, request path, and optional validation details.
+
+### Testing
+
+Run backend tests:
+
+```bash
+cd backend
+./mvnw test
+```
+
+The test environment uses an in-memory H2 database. Flyway applies the initial migration during test startup, and Hibernate validates the resulting schema.
