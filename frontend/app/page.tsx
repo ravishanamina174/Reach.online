@@ -51,6 +51,14 @@ type DashboardData = {
   contracts: Contract[];
   policies: Policy[];
   reviews: Review[];
+  available: {
+    agents: boolean;
+    tools: boolean;
+    dependencies: boolean;
+    contracts: boolean;
+    policies: boolean;
+    reviews: boolean;
+  };
 };
 
 function displayDate(value?: string) {
@@ -66,7 +74,7 @@ function StatCard({
   detail,
 }: {
   label: string;
-  value: number;
+  value: number | string;
   icon: typeof Boxes;
   detail: string;
 }) {
@@ -151,6 +159,14 @@ export default function Home() {
         contracts: contractsResult.value,
         policies: policiesResult.value,
         reviews: reviewsResult.value,
+        available: {
+          agents: true,
+          tools: true,
+          dependencies: true,
+          contracts: true,
+          policies: true,
+          reviews: true,
+        },
       });
     } else {
       setData((previous) => ({
@@ -178,6 +194,22 @@ export default function Home() {
           reviewsResult.status === "fulfilled"
             ? reviewsResult.value
             : previous?.reviews ?? [],
+        available: {
+          agents: agentsResult.status === "fulfilled" || previous?.available.agents === true,
+          tools: toolsResult.status === "fulfilled" || previous?.available.tools === true,
+          dependencies:
+            dependenciesResult.status === "fulfilled" ||
+            previous?.available.dependencies === true,
+          contracts:
+            contractsResult.status === "fulfilled" ||
+            previous?.available.contracts === true,
+          policies:
+            policiesResult.status === "fulfilled" ||
+            previous?.available.policies === true,
+          reviews:
+            reviewsResult.status === "fulfilled" ||
+            previous?.available.reviews === true,
+        },
       }));
     }
 
@@ -191,33 +223,35 @@ export default function Home() {
   const cards = [
     {
       label: "Registered agents",
-      value: data?.agents.length ?? 0,
+      value: data?.available.agents ? data.agents.length : "—",
       icon: Boxes,
       detail: "Agents in registry",
     },
     {
       label: "Registered tools",
-      value: data?.tools.length ?? 0,
+      value: data?.available.tools ? data.tools.length : "—",
       icon: Wrench,
       detail: "Tools in registry",
     },
     {
       label: "Dependencies",
-      value: data?.dependencies.length ?? 0,
+      value: data?.available.dependencies ? data.dependencies.length : "—",
       icon: GitBranch,
       detail: "Agent-tool relationships",
     },
     {
       label: "Contracts",
-      value: data?.contracts.length ?? 0,
+      value: data?.available.contracts ? data.contracts.length : "—",
       icon: FileSearch,
       detail: "Contract records returned",
     },
     {
       label: "Governance policies",
-      value: data?.policies.length ?? 0,
+      value: data?.available.policies ? data.policies.length : "—",
       icon: ShieldCheck,
-      detail: `${data?.policies.filter((policy) => policy.enabled).length ?? 0} enabled`,
+      detail: data?.available.policies
+        ? `${data.policies.filter((policy) => policy.enabled).length} enabled`
+        : "Unavailable",
     },
   ];
 
@@ -301,7 +335,7 @@ export default function Home() {
 
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
           {cards.map((card) => (
-            <StatCard key={card.label} {...card} value={loading && !data ? 0 : card.value} />
+            <StatCard key={card.label} {...card} value={loading && !data ? "—" : card.value} />
           ))}
         </div>
       </section>
@@ -318,11 +352,22 @@ export default function Home() {
             <FileCheck2 className="size-4 text-[var(--muted)]" />
           </div>
 
-          {!data || data.reviews.length === 0 ? (
+          {!data || !data.available.reviews ? (
             <div className="p-8 text-center">
               <p className="text-sm font-medium">
-                {loading ? "Loading reviews…" : "No saved reviews yet"}
+                {loading
+                  ? "Loading reviews…"
+                  : "Reviews are currently unavailable"}
               </p>
+              <p className="mt-1 text-xs text-[var(--muted)]">
+                {data?.available.reviews
+                  ? "Create a review to see it listed here."
+                  : "Refresh the dashboard to retry this request."}
+              </p>
+            </div>
+          ) : data.reviews.length === 0 ? (
+            <div className="p-8 text-center">
+              <p className="text-sm font-medium">No saved reviews yet</p>
               <p className="mt-1 text-xs text-[var(--muted)]">
                 Create a review to see it listed here.
               </p>

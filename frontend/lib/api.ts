@@ -1,6 +1,7 @@
 const API_BASE_URL = (
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080"
 ).replace(/\/+$/, "");
+const REQUEST_TIMEOUT_MS = 15_000;
 
 export type ApiResponse<T> = {
   data: T;
@@ -64,12 +65,26 @@ export async function apiRequest<T>(
   init: RequestInit = {},
 ): Promise<T> {
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  const controller = new AbortController();
+  const timeout = window.setTimeout(
+    () => controller.abort(),
+    REQUEST_TIMEOUT_MS,
+  );
+  const externalAbort = () => controller.abort();
+
+  if (init.signal) {
+    if (init.signal.aborted) {
+      throw new ApiError("The request was cancelled.", 0);
+    }
+    init.signal.addEventListener("abort", externalAbort, { once: true });
+  }
 
   let response: Response;
 
   try {
     response = await fetch(`${API_BASE_URL}${normalizedPath}`, {
       ...init,
+      signal: controller.signal,
       headers: {
         Accept: "application/json",
         ...(init.body ? { "Content-Type": "application/json" } : {}),
@@ -78,10 +93,22 @@ export async function apiRequest<T>(
       cache: "no-store",
     });
   } catch {
+    if (controller.signal.aborted) {
+      throw new ApiError(
+        init.signal?.aborted
+          ? "The request was cancelled."
+          : "The backend request timed out. Check that the Spring Boot server is running and try again.",
+        0,
+      );
+    }
+
     throw new ApiError(
       "Could not connect to the backend. Check that the Spring Boot server is running and the API URL is correct.",
       0,
     );
+  } finally {
+    window.clearTimeout(timeout);
+    init.signal?.removeEventListener("abort", externalAbort);
   }
 
   if (!response.ok) {
@@ -109,6 +136,18 @@ export async function apiRequest<T>(
 export function unwrapApiResponse<T>(
   response: ApiResponse<T>,
 ): T {
+  if (
+    !response ||
+    typeof response !== "object" ||
+    !("data" in response) ||
+    !("timestamp" in response)
+  ) {
+    throw new ApiError(
+      "The backend returned an unexpected response shape.",
+      200,
+    );
+  }
+
   return response.data;
 }
 

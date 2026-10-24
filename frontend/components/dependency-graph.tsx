@@ -169,7 +169,6 @@ export function DependencyGraph({
         nodesDraggable
         nodesConnectable={false}
         elementsSelectable
-        proOptions={{ hideAttribution: true }}
       >
         <Background color="var(--border)" gap={22} />
         <Controls />

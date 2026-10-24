@@ -156,10 +156,6 @@ function Sidebar({
           const Icon = item.icon;
           const isActive = pathname === item.href;
 
-          // if (item.status === "upcoming") {
-          //   // renders a disabled item
-          //  }
-
           return (
             <Link
               key={item.href}
@@ -181,29 +177,6 @@ function Sidebar({
           );
         })}
 
-        <div className="mb-2 mt-8 px-3 text-[11px] font-medium uppercase tracking-[0.12em] text-[var(--muted)]">
-          Governance
-        </div>
-
-        <div
-          className="flex cursor-not-allowed items-center gap-3 rounded-md px-3 py-2.5 text-sm text-[var(--muted)] opacity-75"
-          aria-disabled="true"
-          title="Dependency visualization is planned for Step 3"
-        >
-          <GitBranch className="size-4 shrink-0" />
-          <span className="min-w-0 flex-1 truncate">Dependencies</span>
-          <span className="text-[10px]">Step 3</span>
-        </div>
-
-        <div
-          className="flex cursor-not-allowed items-center gap-3 rounded-md px-3 py-2.5 text-sm text-[var(--muted)] opacity-75"
-          aria-disabled="true"
-          title="Governance policy management is planned for Step 3"
-        >
-          <ShieldCheck className="size-4 shrink-0" />
-          <span className="min-w-0 flex-1 truncate">Policies</span>
-          <span className="text-[10px]">Step 3</span>
-        </div>
       </nav>
 
       <div className="border-t border-[var(--border)] p-4">

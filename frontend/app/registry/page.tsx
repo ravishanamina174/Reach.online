@@ -17,6 +17,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import {
   apiRequest,
+  ApiError,
   unwrapApiResponse,
   type ApiResponse,
 } from "@/lib/api";
@@ -41,6 +42,15 @@ type Tool = GraphTool & {
 
 type Dependency = GraphDependency & {
   id?: string | number;
+  consumerExpectations?: string;
+};
+
+type BackendDependency = {
+  id?: string | number;
+  agent?: Agent;
+  tool?: Tool;
+  agentName?: string;
+  toolName?: string;
   consumerExpectations?: string;
 };
 
@@ -175,6 +185,21 @@ function Field({
   );
 }
 
+function errorMessage(error: unknown): string {
+  if (error instanceof ApiError) return error.message;
+  if (error instanceof Error) return error.message;
+  return "The operation could not be completed.";
+}
+
+function normalizeDependency(dependency: BackendDependency): Dependency {
+  return {
+    id: dependency.id,
+    agentName: dependency.agent?.name ?? dependency.agentName ?? "Unknown agent",
+    toolName: dependency.tool?.name ?? dependency.toolName ?? "Unknown tool",
+    consumerExpectations: dependency.consumerExpectations,
+  };
+}
+
 export default function RegistryPage() {
   const [activeTab, setActiveTab] = useState<Tab>("agents");
 
@@ -212,6 +237,13 @@ export default function RegistryPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [available, setAvailable] = useState({
+    agents: false,
+    tools: false,
+    dependencies: false,
+    contracts: false,
+    policies: false,
+  });
 
   const [agentName, setAgentName] = useState("");
   const [agentDescription, setAgentDescription] = useState("");
@@ -238,7 +270,9 @@ export default function RegistryPage() {
     const results = await Promise.allSettled([
       apiRequest<ApiResponse<Agent[]>>("/api/registry/agents"),
       apiRequest<ApiResponse<Tool[]>>("/api/registry/tools"),
-      apiRequest<ApiResponse<Dependency[]>>("/api/registry/dependencies"),
+      apiRequest<ApiResponse<BackendDependency[]>>(
+        "/api/registry/dependencies",
+      ),
       apiRequest<Contract[]>("/api/contracts"),
       apiRequest<Policy[]>("/api/governance/policies"),
     ]);
@@ -251,32 +285,45 @@ export default function RegistryPage() {
     if (agentResult.status === "fulfilled") {
       setAgents(unwrapApiResponse(agentResult.value));
     } else {
-      errors.push(`Agents: ${String(agentResult.reason)}`);
+      errors.push(`Agents: ${errorMessage(agentResult.reason)}`);
     }
 
     if (toolResult.status === "fulfilled") {
       setTools(unwrapApiResponse(toolResult.value));
     } else {
-      errors.push(`Tools: ${String(toolResult.reason)}`);
+      errors.push(`Tools: ${errorMessage(toolResult.reason)}`);
     }
 
     if (dependencyResult.status === "fulfilled") {
-      setDependencies(unwrapApiResponse(dependencyResult.value));
+      setDependencies(
+        unwrapApiResponse<BackendDependency[]>(dependencyResult.value).map(
+          normalizeDependency,
+        ),
+      );
     } else {
-      errors.push(`Dependencies: ${String(dependencyResult.reason)}`);
+      errors.push(`Dependencies: ${errorMessage(dependencyResult.reason)}`);
     }
 
     if (contractResult.status === "fulfilled") {
       setContracts(contractResult.value);
     } else {
-      errors.push(`Contracts: ${String(contractResult.reason)}`);
+      errors.push(`Contracts: ${errorMessage(contractResult.reason)}`);
     }
 
     if (policyResult.status === "fulfilled") {
       setPolicies(policyResult.value);
     } else {
-      errors.push(`Policies: ${String(policyResult.reason)}`);
+      errors.push(`Policies: ${errorMessage(policyResult.reason)}`);
     }
+
+    setAvailable((previous) => ({
+      agents: agentResult.status === "fulfilled" || previous.agents,
+      tools: toolResult.status === "fulfilled" || previous.tools,
+      dependencies:
+        dependencyResult.status === "fulfilled" || previous.dependencies,
+      contracts: contractResult.status === "fulfilled" || previous.contracts,
+      policies: policyResult.status === "fulfilled" || previous.policies,
+    }));
 
     if (errors.length > 0) {
       setError(errors.join(" "));
@@ -453,11 +500,23 @@ export default function RegistryPage() {
 
       <section className="grid grid-cols-2 gap-3 xl:grid-cols-5">
         {[
-          { label: "Agents", count: agents.length },
-          { label: "Tools", count: tools.length },
-          { label: "Dependencies", count: dependencies.length },
-          { label: "Contracts", count: contracts.length },
-          { label: "Policies", count: policies.length },
+          {
+            label: "Agents",
+            count: available.agents ? agents.length : "—",
+          },
+          { label: "Tools", count: available.tools ? tools.length : "—" },
+          {
+            label: "Dependencies",
+            count: available.dependencies ? dependencies.length : "—",
+          },
+          {
+            label: "Contracts",
+            count: available.contracts ? contracts.length : "—",
+          },
+          {
+            label: "Policies",
+            count: available.policies ? policies.length : "—",
+          },
         ].map((item) => (
           <div
             key={item.label}
@@ -523,7 +582,12 @@ export default function RegistryPage() {
                     </p>
                   </div>
 
-                  {agents.length === 0 ? (
+                  {!available.agents ? (
+                    <EmptyMessage
+                      title="Agents are unavailable"
+                      description="The agent list request failed. Use Refresh registry to retry."
+                    />
+                  ) : agents.length === 0 ? (
                     <EmptyMessage
                       title="No agents registered"
                       description="Use the form below to register the first agent."
@@ -561,7 +625,12 @@ export default function RegistryPage() {
               {activeTab === "tools" && (
                 <>
                   <h2 className="text-sm font-semibold">Registered tools</h2>
-                  {tools.length === 0 ? (
+                  {!available.tools ? (
+                    <EmptyMessage
+                      title="Tools are unavailable"
+                      description="The tool list request failed. Use Refresh registry to retry."
+                    />
+                  ) : tools.length === 0 ? (
                     <EmptyMessage title="No tools registered" description="Register a tool to make it available for agent dependency mapping." />
                   ) : (
                     <DataTable headers={["Name", "Protocol", "Endpoint", "Description"]}>
@@ -597,7 +666,12 @@ export default function RegistryPage() {
               {activeTab === "dependencies" && (
                 <>
                   <h2 className="text-sm font-semibold">Agent-tool dependencies</h2>
-                  {dependencies.length === 0 ? (
+                  {!available.dependencies ? (
+                    <EmptyMessage
+                      title="Dependencies are unavailable"
+                      description="The dependency list request failed. Use Refresh registry to retry."
+                    />
+                  ) : dependencies.length === 0 ? (
                     <EmptyMessage title="No dependencies registered" description="Create a dependency to record which tool an agent consumes." />
                   ) : (
                     <DataTable headers={["Agent", "Tool", "Consumer expectations"]}>
@@ -648,7 +722,12 @@ export default function RegistryPage() {
               {activeTab === "contracts" && (
                 <>
                   <h2 className="text-sm font-semibold">Registered contracts</h2>
-                  {contracts.length === 0 ? (
+                  {!available.contracts ? (
+                    <EmptyMessage
+                      title="Contracts are unavailable"
+                      description="The contract list request failed. Use Refresh registry to retry."
+                    />
+                  ) : contracts.length === 0 ? (
                     <EmptyMessage title="No contracts found" description="Contracts created through the backend API will appear here." />
                   ) : (
                     <DataTable headers={["Name", "Version", "Type", "ID"]}>
@@ -671,7 +750,12 @@ export default function RegistryPage() {
               {activeTab === "policies" && (
                 <>
                   <h2 className="text-sm font-semibold">Governance policies</h2>
-                  {policies.length === 0 ? (
+                  {!available.policies ? (
+                    <EmptyMessage
+                      title="Policies are unavailable"
+                      description="The policy list request failed. Use Refresh registry to retry."
+                    />
+                  ) : policies.length === 0 ? (
                     <EmptyMessage title="No policies registered" description="Create a policy using the form below." />
                   ) : (
                     <DataTable headers={["Policy", "Rule type", "Status", "Description", "Action"]}>
