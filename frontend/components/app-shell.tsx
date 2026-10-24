@@ -187,7 +187,7 @@ function Sidebar({
           <span className="min-w-0 flex-1">
             <span className="block text-xs font-medium">Developer workspace</span>
             <span className="block text-xs text-[var(--muted)]">
-              Local environment
+              Online
             </span>
           </span>
           <ArrowUpRight className="size-3.5 text-[var(--muted)]" />

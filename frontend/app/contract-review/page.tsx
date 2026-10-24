@@ -152,7 +152,7 @@ function statusStyle(status?: string): string {
 function StatusPill({ value }: { value?: string }) {
   return (
     <span
-      className={`inline-flex max-w-full items-center rounded-full border px-2.5 py-1 text-xs font-medium ${statusStyle(value)}`}
+      className={`inline-flex max-w-full items-center rounded-sm border px-2.5 py-1 text-xs font-medium ${statusStyle(value)}`}
     >
       {value || "Unknown"}
     </span>
@@ -173,10 +173,10 @@ function Panel({
   action?: React.ReactNode;
 }) {
   return (
-    <section className="min-w-0 rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+    <section className="min-w-0 rounded-sm border border-[var(--border)] bg-[var(--surface)]">
       <div className="flex flex-col gap-3 border-b border-[var(--border)] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
         <div className="flex min-w-0 items-start gap-3">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--surface-secondary)]">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-sm border border-[var(--border)] bg-[var(--surface-secondary)]">
             <Icon className="size-4" />
           </div>
           <div className="min-w-0">
@@ -204,7 +204,7 @@ function EmptyState({
 }) {
   return (
     <div className="flex flex-col items-center justify-center py-10 text-center">
-      <div className="mb-3 flex size-10 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-secondary)]">
+      <div className="mb-3 flex size-10 items-center justify-center rounded-sm border border-[var(--border)] bg-[var(--surface-secondary)]">
         <FileSearch className="size-4 text-[var(--muted)]" />
       </div>
       <p className="text-sm font-medium">{title}</p>
@@ -219,7 +219,7 @@ function ErrorNotice({ message }: { message: string }) {
   return (
     <div
       role="alert"
-      className="flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/5 p-3 text-sm"
+      className="flex items-start gap-2 rounded-sm border border-red-500/30 bg-red-500/5 p-3 text-sm"
     >
       <AlertCircle className="mt-0.5 size-4 shrink-0 text-red-500" />
       <span className="leading-5">{message}</span>
@@ -229,14 +229,14 @@ function ErrorNotice({ message }: { message: string }) {
 
 function ChangeRow({ change }: { change: ContractChange }) {
   return (
-    <div className="min-w-0 space-y-3 rounded-lg border border-[var(--border)] p-3 sm:p-4">
+    <div className="min-w-0 space-y-3 rounded-sm border border-[var(--border)] p-3 sm:p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <code className="break-all text-xs font-medium">{change.path}</code>
         <StatusPill value={change.type} />
       </div>
 
       <div className="grid min-w-0 gap-3 md:grid-cols-2">
-        <div className="min-w-0 rounded-md border border-[var(--border)] bg-[var(--surface-secondary)] p-3">
+        <div className="min-w-0 rounded-sm border border-[var(--border)] bg-[var(--surface-secondary)] p-3">
           <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--muted)]">
             Before
           </p>
@@ -245,7 +245,7 @@ function ChangeRow({ change }: { change: ContractChange }) {
           </pre>
         </div>
 
-        <div className="min-w-0 rounded-md border border-[var(--border)] p-3">
+        <div className="min-w-0 rounded-sm border border-[var(--border)] p-3">
           <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--muted)]">
             After
           </p>
@@ -556,7 +556,7 @@ useEffect(() => {
     <div className="mx-auto max-w-[1200px] space-y-7">
       <header className="flex flex-col justify-between gap-4 border-b border-[var(--border)] pb-6 sm:flex-row sm:items-end">
         <div className="space-y-3">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] px-2.5 py-1 text-xs text-[var(--muted-foreground)]">
+          <div className="inline-flex items-center gap-2 rounded-sm border border-[var(--border)] px-2.5 py-1 text-xs text-[var(--muted-foreground)]">
             <FileSearch className="size-3.5" />
             Release workflow
           </div>
@@ -575,7 +575,7 @@ useEffect(() => {
           type="button"
           onClick={() => void loadInitialData()}
           disabled={initialState === "loading"}
-          className="inline-flex items-center justify-center gap-2 rounded-md border border-[var(--border)] px-3 py-2 text-sm font-medium transition-colors hover:bg-[var(--surface-hover)] disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex items-center justify-center gap-2 rounded-sm border border-[var(--border)] px-3 py-2 text-sm font-medium transition-colors hover:bg-[var(--surface-hover)] disabled:cursor-not-allowed disabled:opacity-50"
         >
           <RefreshCw
             className={`size-3.5 ${initialState === "loading" ? "animate-spin" : ""}`}
@@ -613,7 +613,7 @@ useEffect(() => {
                   onChange={(event) =>
                     void handleContractChange(event.target.value)
                   }
-                  className="w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-2.5 text-sm outline-none focus:border-[var(--focus-ring)]"
+                  className="w-full rounded-sm border border-[var(--border)] bg-[var(--background)] px-3 py-2.5 text-sm outline-none focus:border-[var(--focus-ring)]"
                 >
                   {Array.from(
                     new Set(contracts.map((contract) => contract.name)),
@@ -638,7 +638,7 @@ useEffect(() => {
                   value={fromVersion}
                   onChange={(event) => setFromVersion(event.target.value)}
                   disabled={versionsState === "loading" || versionOptions.length === 0}
-                  className="w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-2.5 text-sm outline-none focus:border-[var(--focus-ring)] disabled:opacity-50"
+                  className="w-full rounded-sm border border-[var(--border)] bg-[var(--background)] px-3 py-2.5 text-sm outline-none focus:border-[var(--focus-ring)] disabled:opacity-50"
                 >
                   <option value="">Select baseline</option>
                   {versionOptions.map((version) => (
@@ -657,7 +657,7 @@ useEffect(() => {
                   value={toVersion}
                   onChange={(event) => setToVersion(event.target.value)}
                   disabled={versionsState === "loading" || versionOptions.length === 0}
-                  className="w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-2.5 text-sm outline-none focus:border-[var(--focus-ring)] disabled:opacity-50"
+                  className="w-full rounded-sm border border-[var(--border)] bg-[var(--background)] px-3 py-2.5 text-sm outline-none focus:border-[var(--focus-ring)] disabled:opacity-50"
                 >
                   <option value="">Select proposed version</option>
                   {versionOptions.map((version) => (
@@ -693,7 +693,7 @@ useEffect(() => {
                 type="button"
                 onClick={() => void analyzeChanges()}
                 disabled={!canAnalyze}
-                className="inline-flex items-center justify-center gap-2 rounded-md bg-[var(--accent)] px-4 py-2.5 text-sm font-medium text-[var(--accent-foreground)] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+                className="inline-flex items-center justify-center gap-2 rounded-sm bg-[var(--accent)] px-4 py-2.5 text-sm font-medium text-[var(--accent-foreground)] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {analysisState === "loading" ? (
                   <LoaderCircle className="size-4 animate-spin" />
@@ -711,7 +711,7 @@ useEffect(() => {
       {analysisError && <ErrorNotice message={analysisError} />}
 
       {analysisState === "loading" && (
-        <div className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 text-sm text-[var(--muted-foreground)]">
+        <div className="flex items-center gap-3 rounded-sm border border-[var(--border)] bg-[var(--surface)] p-5 text-sm text-[var(--muted-foreground)]">
           <LoaderCircle className="size-4 animate-spin" />
           Comparing versions and analyzing affected agents…
         </div>
@@ -744,7 +744,7 @@ useEffect(() => {
             ].map((item) => (
               <div
                 key={item.label}
-                className="min-w-0 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4"
+                className="min-w-0 rounded-sm border border-[var(--border)] bg-[var(--surface)] p-4"
               >
                 <p className="text-xs text-[var(--muted)]">{item.label}</p>
                 <p className="mt-2 break-words text-xl font-semibold tracking-tight">
@@ -786,7 +786,7 @@ useEffect(() => {
             icon={GitBranch}
             action={<StatusPill value={impact.analysisStatus} />}
           >
-            <div className="mb-4 rounded-lg border border-[var(--border)] bg-[var(--surface-secondary)] p-4">
+            <div className="mb-4 rounded-sm border border-[var(--border)] bg-[var(--surface-secondary)] p-4">
               <p className="text-xs font-medium text-[var(--muted)]">
                 Analysis summary
               </p>
@@ -811,10 +811,10 @@ useEffect(() => {
                   return (
                     <div
                       key={`${label}-${index}`}
-                      className="flex flex-col gap-2 rounded-lg border border-[var(--border)] p-3 sm:flex-row sm:items-center sm:justify-between"
+                      className="flex flex-col gap-2 rounded-sm border border-[var(--border)] p-3 sm:flex-row sm:items-center sm:justify-between"
                     >
                       <div className="flex min-w-0 items-center gap-3">
-                        <div className="flex size-8 shrink-0 items-center justify-center rounded-md border border-[var(--border)] bg-[var(--surface-secondary)]">
+                        <div className="flex size-8 shrink-0 items-center justify-center rounded-sm border border-[var(--border)] bg-[var(--surface-secondary)]">
                           <GitBranch className="size-4" />
                         </div>
                         <div className="min-w-0">
@@ -828,7 +828,7 @@ useEffect(() => {
                       </div>
                       <details className="text-xs text-[var(--muted-foreground)]">
                         <summary className="cursor-pointer">Details</summary>
-                        <pre className="app-scrollbar mt-2 max-w-full overflow-auto whitespace-pre-wrap break-words rounded-md bg-[var(--surface-secondary)] p-3">
+                        <pre className="app-scrollbar mt-2 max-w-full overflow-auto whitespace-pre-wrap break-words rounded-sm bg-[var(--surface-secondary)] p-3">
                           {prettyValue(agent)}
                         </pre>
                       </details>
@@ -843,7 +843,7 @@ useEffect(() => {
                 type="button"
                 onClick={() => void evaluateGovernance()}
                 disabled={governanceState === "loading"}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-[var(--border)] px-4 py-2.5 text-sm font-medium transition-colors hover:bg-[var(--surface-hover)] disabled:opacity-50 sm:w-auto"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-sm border border-[var(--border)] px-4 py-2.5 text-sm font-medium transition-colors hover:bg-[var(--surface-hover)] disabled:opacity-50 sm:w-auto"
               >
                 {governanceState === "loading" ? (
                   <LoaderCircle className="size-4 animate-spin" />
@@ -882,7 +882,7 @@ useEffect(() => {
                 ].map((item) => (
                   <div
                     key={item.label}
-                    className="rounded-lg border border-[var(--border)] p-3"
+                    className="rounded-sm border border-[var(--border)] p-3"
                   >
                     <p className="text-xs text-[var(--muted)]">
                       {item.label}
@@ -894,7 +894,7 @@ useEffect(() => {
                 ))}
               </div>
 
-              <div className="mt-4 rounded-lg border border-[var(--border)] bg-[var(--surface-secondary)] p-4">
+              <div className="mt-4 rounded-sm border border-[var(--border)] bg-[var(--surface-secondary)] p-4">
                 <p className="text-xs font-medium text-[var(--muted)]">
                   Evaluation summary
                 </p>
@@ -917,7 +917,7 @@ useEffect(() => {
                   findings.map((finding, index) => (
                     <div
                       key={`${finding.policyName ?? finding.name ?? "finding"}-${index}`}
-                      className="rounded-lg border border-[var(--border)] p-4"
+                      className="rounded-sm border border-[var(--border)] p-4"
                     >
                       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                         <div>
@@ -945,7 +945,7 @@ useEffect(() => {
                         <summary className="cursor-pointer">
                           Raw finding details
                         </summary>
-                        <pre className="app-scrollbar mt-2 max-w-full overflow-auto whitespace-pre-wrap break-words rounded-md bg-[var(--surface-secondary)] p-3">
+                        <pre className="app-scrollbar mt-2 max-w-full overflow-auto whitespace-pre-wrap break-words rounded-sm bg-[var(--surface-secondary)] p-3">
                           {prettyValue(finding)}
                         </pre>
                       </details>
@@ -959,7 +959,7 @@ useEffect(() => {
                   type="button"
                   onClick={() => void createReleaseReview()}
                   disabled={reviewState === "loading"}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-[var(--accent)] px-4 py-2.5 text-sm font-medium text-[var(--accent-foreground)] transition-opacity hover:opacity-90 disabled:opacity-50 sm:w-auto"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-sm bg-[var(--accent)] px-4 py-2.5 text-sm font-medium text-[var(--accent-foreground)] transition-opacity hover:opacity-90 disabled:opacity-50 sm:w-auto"
                 >
                   {reviewState === "loading" ? (
                     <LoaderCircle className="size-4 animate-spin" />
@@ -981,7 +981,7 @@ useEffect(() => {
 
           {selectedReview && (
             <section
-              className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5"
+              className="rounded-sm border border-[var(--border)] bg-[var(--surface)] p-5"
               aria-live="polite"
             >
               <div className="flex items-start gap-3">
@@ -1006,7 +1006,7 @@ useEffect(() => {
                   <summary className="cursor-pointer text-xs font-medium">
                     View saved review findings
                   </summary>
-                  <pre className="app-scrollbar mt-3 max-h-96 overflow-auto whitespace-pre-wrap break-words rounded-lg border border-[var(--border)] bg-[var(--surface-secondary)] p-4 font-mono text-xs leading-5">
+                  <pre className="app-scrollbar mt-3 max-h-96 overflow-auto whitespace-pre-wrap break-words rounded-sm border border-[var(--border)] bg-[var(--surface-secondary)] p-4 font-mono text-xs leading-5">
                     {prettyValue(selectedReview.findings)}
                   </pre>
                 </details>
@@ -1021,7 +1021,7 @@ useEffect(() => {
         description="Review records retrieved from the backend."
         icon={FileCheck2}
         action={
-          <span className="rounded-full border border-[var(--border)] px-2.5 py-1 text-xs text-[var(--muted)]">
+          <span className="rounded-sm border border-[var(--border)] px-2.5 py-1 text-xs text-[var(--muted)]">
             {reviews.length} records
           </span>
         }
@@ -1070,7 +1070,7 @@ useEffect(() => {
                       <button
                         type="button"
                         onClick={() => void openSavedReview(review)}
-                        className="rounded-md border border-[var(--border)] px-2.5 py-1.5 text-xs font-medium hover:bg-[var(--surface-hover)]"
+                        className="rounded-sm border border-[var(--border)] px-2.5 py-1.5 text-xs font-medium hover:bg-[var(--surface-hover)]"
                       >
                         View
                       </button>

@@ -78,20 +78,62 @@ type Tab =
   | "policies"
   | "graph";
 
-const tabs: { id: Tab; label: string; icon: typeof Boxes }[] = [
-  { id: "agents", label: "Agents", icon: Boxes },
-  { id: "tools", label: "Tools", icon: Wrench },
-  { id: "dependencies", label: "Dependencies", icon: GitBranch },
-  { id: "contracts", label: "Contracts", icon: FileText },
-  { id: "policies", label: "Policies", icon: ShieldCheck },
-  { id: "graph", label: "Dependency graph", icon: Activity },
+const tabs: {
+  id: Tab;
+  label: string;
+  icon: typeof Boxes;
+  iconColor: string;
+  iconBackground: string;
+}[] = [
+  {
+    id: "agents",
+    label: "Agents",
+    icon: Boxes,
+    iconColor: "text-violet-500",
+    iconBackground: "#09090b",
+  },
+  {
+    id: "tools",
+    label: "Tools",
+    icon: Wrench,
+    iconColor: "text-sky-500",
+    iconBackground: "#0c0c0d",
+  },
+  {
+    id: "dependencies",
+    label: "Dependencies",
+    icon: GitBranch,
+    iconColor: "text-amber-500",
+    iconBackground: "#09090b",
+  },
+  {
+    id: "contracts",
+    label: "Contracts",
+    icon: FileText,
+    iconColor: "text-rose-500",
+    iconBackground: "#09090b",
+  },
+  {
+    id: "policies",
+    label: "Policies",
+    icon: ShieldCheck,
+    iconColor: "text-emerald-500",
+    iconBackground: "#09090b",
+  },
+  {
+    id: "graph",
+    label: "Dependency graph",
+    icon: Activity,
+    iconColor: "text-cyan-500",
+    iconBackground: "#09090b",
+  },
 ];
 
 function ErrorMessage({ message }: { message: string }) {
   return (
     <div
       role="alert"
-      className="flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/5 p-3 text-sm"
+      className="flex items-start gap-2 rounded-sm border border-red-500/30 bg-red-500/5 p-3 text-sm"
     >
       <AlertCircle className="mt-0.5 size-4 shrink-0 text-red-500" />
       <span>{message}</span>
@@ -107,7 +149,7 @@ function EmptyMessage({
   description: string;
 }) {
   return (
-    <div className="rounded-lg border border-dashed border-[var(--border-strong)] p-10 text-center">
+    <div className="rounded-sm border border-dashed border-[var(--border-strong)] p-10 text-center">
       <p className="text-sm font-medium">{title}</p>
       <p className="mx-auto mt-2 max-w-md text-xs leading-5 text-[var(--muted)]">
         {description}
@@ -124,7 +166,7 @@ function DataTable({
   children: React.ReactNode;
 }) {
   return (
-    <div className="overflow-x-auto rounded-lg border border-[var(--border)]">
+    <div className="overflow-x-auto rounded-sm border border-[var(--border)]">
       <table className="w-full min-w-[600px] text-left text-sm">
         <thead className="bg-[var(--surface-secondary)]">
           <tr>
@@ -179,7 +221,7 @@ function Field({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
-        className="w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-2.5 text-sm outline-none focus:border-[var(--focus-ring)]"
+        className="w-full rounded-sm border border-[var(--border)] bg-[var(--background)] px-3 py-2.5 text-sm outline-none focus:border-[var(--focus-ring)]"
       />
     </label>
   );
@@ -474,7 +516,7 @@ export default function RegistryPage() {
     <div className="mx-auto max-w-[1200px] space-y-7">
       <header className="flex flex-col justify-between gap-4 border-b border-[var(--border)] pb-6 sm:flex-row sm:items-end">
         <div className="space-y-3">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] px-2.5 py-1 text-xs text-[var(--muted-foreground)]">
+          <div className="inline-flex items-center gap-2 rounded-sm border border-[var(--border)] px-2.5 py-1 text-xs text-[var(--muted-foreground)]">
             <Boxes className="size-3.5" />
             Platform registry
           </div>
@@ -491,7 +533,7 @@ export default function RegistryPage() {
           type="button"
           onClick={() => void loadData()}
           disabled={loading || busy}
-          className="inline-flex items-center justify-center gap-2 rounded-md border border-[var(--border)] px-3 py-2 text-sm font-medium hover:bg-[var(--surface-hover)] disabled:opacity-50"
+          className="inline-flex items-center justify-center gap-2 rounded-sm border border-[var(--border)] px-3 py-2 text-sm font-medium hover:bg-[var(--surface-hover)] disabled:opacity-50"
         >
           <RefreshCw className={`size-3.5 ${loading ? "animate-spin" : ""}`} />
           Refresh registry
@@ -520,7 +562,7 @@ export default function RegistryPage() {
         ].map((item) => (
           <div
             key={item.label}
-            className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4"
+            className="rounded-sm border border-[var(--border)] bg-[var(--surface)] p-4"
           >
             <p className="text-xs text-[var(--muted)]">{item.label}</p>
             <p className="mt-2 text-2xl font-semibold tracking-tight">
@@ -534,13 +576,13 @@ export default function RegistryPage() {
       {notice && (
         <div
           role="status"
-          className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3 text-sm text-emerald-700 dark:text-emerald-300"
+          className="rounded-sm border border-emerald-500/30 bg-emerald-500/5 p-3 text-sm text-emerald-700 dark:text-emerald-300"
         >
           {notice}
         </div>
       )}
 
-      <section className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+      <section className="overflow-hidden rounded-sm border border-[var(--border)] bg-[var(--surface)]">
         <div className="app-scrollbar flex gap-1 overflow-x-auto border-b border-[var(--border)] p-2">
           {tabs.map((tab) => {
             const Icon = tab.icon;
@@ -552,13 +594,17 @@ export default function RegistryPage() {
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
                 aria-pressed={active}
-                className={`inline-flex shrink-0 items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors ${
+                className={`inline-flex shrink-0 items-center gap-2 rounded-sm px-3 py-2 text-sm transition-colors ${
                   active
                     ? "bg-[var(--surface-hover)] font-medium text-[var(--foreground)]"
                     : "text-[var(--muted-foreground)] hover:bg-[var(--surface-secondary)]"
                 }`}
               >
-                <Icon className="size-4" />
+                <span
+  className={`flex size-8 shrink-0 items-center justify-center rounded-md ${tab.iconBackground}`}
+>
+  <Icon className={`size-4 ${tab.iconColor}`} />
+</span>
                 {tab.label}
               </button>
             );
@@ -576,7 +622,7 @@ export default function RegistryPage() {
               {activeTab === "agents" && (
                 <>
                   <div>
-                    <h2 className="text-sm font-semibold">Registered agents</h2>
+                    <h2 className="text-lg font-semibold">Registered agents</h2>
                     <p className="mt-1 text-xs text-[var(--muted)]">
                       Agent names must match the identifiers used by dependency records.
                     </p>
@@ -605,7 +651,7 @@ export default function RegistryPage() {
                     </DataTable>
                   )}
 
-                  <form onSubmit={createAgent} className="space-y-4 rounded-lg border border-[var(--border)] p-4">
+                  <form onSubmit={createAgent} className="space-y-4 rounded-sm border border-[var(--border)] p-4">
                     <h3 className="flex items-center gap-2 text-sm font-semibold">
                       <Plus className="size-4" />
                       Register an agent
@@ -615,7 +661,7 @@ export default function RegistryPage() {
                       <Field label="Agent type" value={agentType} onChange={setAgentType} placeholder="GENERAL" required />
                       <Field label="Description" value={agentDescription} onChange={setAgentDescription} placeholder="What this agent does" />
                     </div>
-                    <button disabled={busy} className="rounded-md bg-[var(--accent)] px-4 py-2.5 text-sm font-medium text-[var(--accent-foreground)] disabled:opacity-50">
+                    <button disabled={busy} className="rounded-sm bg-[var(--accent)] px-4 py-2.5 text-sm font-medium text-[var(--accent-foreground)] disabled:opacity-50">
                       {busy ? "Saving…" : "Register agent"}
                     </button>
                   </form>
@@ -624,7 +670,7 @@ export default function RegistryPage() {
 
               {activeTab === "tools" && (
                 <>
-                  <h2 className="text-sm font-semibold">Registered tools</h2>
+                  <h2 className="text-lg font-semibold">Registered tools</h2>
                   {!available.tools ? (
                     <EmptyMessage
                       title="Tools are unavailable"
@@ -645,7 +691,7 @@ export default function RegistryPage() {
                     </DataTable>
                   )}
 
-                  <form onSubmit={createTool} className="space-y-4 rounded-lg border border-[var(--border)] p-4">
+                  <form onSubmit={createTool} className="space-y-4 rounded-sm border border-[var(--border)] p-4">
                     <h3 className="flex items-center gap-2 text-sm font-semibold">
                       <Plus className="size-4" />
                       Register a tool
@@ -656,7 +702,7 @@ export default function RegistryPage() {
                       <Field label="Endpoint" value={toolEndpoint} onChange={setToolEndpoint} placeholder="https://example.com/mcp" required />
                       <Field label="Description" value={toolDescription} onChange={setToolDescription} placeholder="Tool description" />
                     </div>
-                    <button disabled={busy} className="rounded-md bg-[var(--accent)] px-4 py-2.5 text-sm font-medium text-[var(--accent-foreground)] disabled:opacity-50">
+                    <button disabled={busy} className="rounded-sm bg-[var(--accent)] px-4 py-2.5 text-sm font-medium text-[var(--accent-foreground)] disabled:opacity-50">
                       {busy ? "Saving…" : "Register tool"}
                     </button>
                   </form>
@@ -665,7 +711,7 @@ export default function RegistryPage() {
 
               {activeTab === "dependencies" && (
                 <>
-                  <h2 className="text-sm font-semibold">Agent-tool dependencies</h2>
+                  <h2 className="text-lg font-semibold">Agent-tool dependencies</h2>
                   {!available.dependencies ? (
                     <EmptyMessage
                       title="Dependencies are unavailable"
@@ -687,7 +733,7 @@ export default function RegistryPage() {
                     </DataTable>
                   )}
 
-                  <form onSubmit={createDependency} className="space-y-4 rounded-lg border border-[var(--border)] p-4">
+                  <form onSubmit={createDependency} className="space-y-4 rounded-sm border border-[var(--border)] p-4">
                     <h3 className="flex items-center gap-2 text-sm font-semibold">
                       <Plus className="size-4" />
                       Register a dependency
@@ -712,7 +758,7 @@ export default function RegistryPage() {
                       <span className="text-xs font-medium text-[var(--muted-foreground)]">Consumer expectations (JSON)</span>
                       <textarea value={expectations} onChange={(event) => setExpectations(event.target.value)} rows={4} required className="w-full rounded-md border border-[var(--border)] bg-[var(--background)] p-3 font-mono text-xs outline-none focus:border-[var(--focus-ring)]" />
                     </label>
-                    <button disabled={busy || agents.length === 0 || tools.length === 0} className="rounded-md bg-[var(--accent)] px-4 py-2.5 text-sm font-medium text-[var(--accent-foreground)] disabled:opacity-50">
+                    <button disabled={busy || agents.length === 0 || tools.length === 0} className="rounded-sm bg-[var(--accent)] px-4 py-2.5 text-sm font-medium text-[var(--accent-foreground)] disabled:opacity-50">
                       {busy ? "Saving…" : "Register dependency"}
                     </button>
                   </form>
@@ -721,7 +767,7 @@ export default function RegistryPage() {
 
               {activeTab === "contracts" && (
                 <>
-                  <h2 className="text-sm font-semibold">Registered contracts</h2>
+                  <h2 className="text-lg font-semibold">Registered contracts</h2>
                   {!available.contracts ? (
                     <EmptyMessage
                       title="Contracts are unavailable"
@@ -749,7 +795,7 @@ export default function RegistryPage() {
 
               {activeTab === "policies" && (
                 <>
-                  <h2 className="text-sm font-semibold">Governance policies</h2>
+                  <h2 className="text-lg font-semibold">Governance policies</h2>
                   {!available.policies ? (
                     <EmptyMessage
                       title="Policies are unavailable"
@@ -764,13 +810,13 @@ export default function RegistryPage() {
                           <Cell>{policy.name}</Cell>
                           <Cell>{policy.ruleType}</Cell>
                           <Cell>
-                            <span className={`rounded-full border px-2 py-1 text-xs ${policy.enabled ? "border-emerald-500/30 text-emerald-700 dark:text-emerald-300" : "border-[var(--border)] text-[var(--muted)]"}`}>
+                            <span className={`rounded-md border px-2 py-1 text-xs ${policy.enabled ? "border-emerald-500/30 text-emerald-700 dark:text-emerald-300" : "border-[var(--border)] text-[var(--muted)]"}`}>
                               {policy.enabled ? "Enabled" : "Disabled"}
                             </span>
                           </Cell>
                           <Cell>{policy.description ?? "—"}</Cell>
                           <Cell>
-                            <button type="button" disabled={busy} onClick={() => void togglePolicy(policy)} className="rounded-md border border-[var(--border)] px-2.5 py-1.5 text-xs font-medium hover:bg-[var(--surface-hover)] disabled:opacity-50">
+                            <button type="button" disabled={busy} onClick={() => void togglePolicy(policy)} className="rounded-sm border border-[var(--border)] px-2.5 py-1.5 text-xs font-medium hover:bg-[var(--surface-hover)] disabled:opacity-50">
                               {policy.enabled ? "Disable" : "Enable"}
                             </button>
                           </Cell>
@@ -779,7 +825,7 @@ export default function RegistryPage() {
                     </DataTable>
                   )}
 
-                  <form onSubmit={createPolicy} className="space-y-4 rounded-lg border border-[var(--border)] p-4">
+                  <form onSubmit={createPolicy} className="space-y-4 rounded-sm border border-[var(--border)] p-4">
                     <h3 className="flex items-center gap-2 text-sm font-semibold">
                       <Plus className="size-4" />
                       Create governance policy
@@ -788,7 +834,7 @@ export default function RegistryPage() {
                       <Field label="Name" value={policyName} onChange={setPolicyName} placeholder="Warn on contract changes" required />
                       <label className="block space-y-1.5">
                         <span className="text-xs font-medium text-[var(--muted-foreground)]">Rule type</span>
-                        <select value={policyRule} onChange={(event) => setPolicyRule(event.target.value)} className="w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-2.5 text-sm">
+                        <select value={policyRule} onChange={(event) => setPolicyRule(event.target.value)} className="w-full rounded-sm border border-[var(--border)] bg-[var(--background)] px-3 py-2.5 text-sm">
                           <option value="BLOCK_ON_ANY_REMOVAL">BLOCK_ON_ANY_REMOVAL</option>
                           <option value="BLOCK_REMOVED_PROTECTED_PATH">BLOCK_REMOVED_PROTECTED_PATH</option>
                           <option value="WARN_ON_ANY_CHANGE">WARN_ON_ANY_CHANGE</option>
@@ -798,9 +844,9 @@ export default function RegistryPage() {
                     </div>
                     <label className="block space-y-1.5">
                       <span className="text-xs font-medium text-[var(--muted-foreground)]">Configuration (JSON)</span>
-                      <textarea value={policyConfiguration} onChange={(event) => setPolicyConfiguration(event.target.value)} rows={3} required className="w-full rounded-md border border-[var(--border)] bg-[var(--background)] p-3 font-mono text-xs outline-none focus:border-[var(--focus-ring)]" />
+                      <textarea value={policyConfiguration} onChange={(event) => setPolicyConfiguration(event.target.value)} rows={3} required className="w-full rounded-sm border border-[var(--border)] bg-[var(--background)] p-3 font-mono text-xs outline-none focus:border-[var(--focus-ring)]" />
                     </label>
-                    <button disabled={busy} className="rounded-md bg-[var(--accent)] px-4 py-2.5 text-sm font-medium text-[var(--accent-foreground)] disabled:opacity-50">
+                    <button disabled={busy} className="rounded-sm bg-[var(--accent)] px-4 py-2.5 text-sm font-medium text-[var(--accent-foreground)] disabled:opacity-50">
                       {busy ? "Saving…" : "Create policy"}
                     </button>
                   </form>
@@ -810,7 +856,7 @@ export default function RegistryPage() {
               {activeTab === "graph" && (
                 <>
                   <div>
-                    <h2 className="text-sm font-semibold">Dependency graph</h2>
+                    <h2 className="text-lg font-semibold">Dependency graph</h2>
                     <p className="mt-1 text-xs leading-5 text-[var(--muted)]">
                       Each edge represents a registered agent-to-tool dependency.
                       Use the graph controls to zoom and pan.

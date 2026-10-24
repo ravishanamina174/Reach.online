@@ -2,22 +2,23 @@
 "use client";
 
 import {
-  Activity,
   AlertCircle,
   ArrowRight,
   Boxes,
-  CheckCircle2,
   FileCheck2,
   FileSearch,
   GitBranch,
-  LoaderCircle,
-  RefreshCw,
   ShieldCheck,
+  LoaderCircle,
+  CheckCircle2,
+  RefreshCw,
+  Activity,
   Wrench,
 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
+import OverviewHero from "@/components/overview-hero";
 import {
   apiRequest,
   ApiError,
@@ -36,6 +37,7 @@ type Tool = { name: string };
 type Dependency = { agentName: string; toolName: string };
 type Contract = { name: string; version: string };
 type Policy = { id?: string | number; name: string; enabled: boolean };
+
 type Review = {
   id: string | number;
   contractName?: string;
@@ -63,37 +65,51 @@ type DashboardData = {
 
 function displayDate(value?: string) {
   if (!value) return "—";
+
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
 }
+
 
 function StatCard({
   label,
   value,
   icon: Icon,
   detail,
+  iconColor,
+  iconBackground,
 }: {
   label: string;
   value: number | string;
   icon: typeof Boxes;
   detail: string;
+  iconColor: string;
+  iconBackground: string;
 }) {
   return (
-    <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
+    <div className="rounded-sm border border-[var(--border)] bg-[var(--surface)] p-4 transition-colors hover:bg-[var(--surface-secondary)]">
       <div className="flex items-center justify-between gap-2">
         <p className="text-xs text-[var(--muted)]">{label}</p>
-        <Icon className="size-4 text-[var(--muted)]" />
+
+        <div
+          className={`flex size-9 items-center justify-center rounded-lg ${iconBackground}`}
+        >
+          <Icon className={`size-[21px] ${iconColor}`} />
+        </div>
       </div>
+
       <p className="mt-3 text-2xl font-semibold tracking-tight">{value}</p>
       <p className="mt-1 text-xs text-[var(--muted)]">{detail}</p>
     </div>
   );
 }
 
+
 export default function Home() {
   const [connection, setConnection] = useState<ConnectionState>({
     status: "checking",
   });
+
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -123,7 +139,10 @@ export default function Home() {
     ] = results;
 
     if (healthResult.status === "fulfilled") {
-      setConnection({ status: "connected", health: healthResult.value });
+      setConnection({
+        status: "connected",
+        health: healthResult.value,
+      });
     } else {
       setConnection({
         status: "disconnected",
@@ -134,9 +153,9 @@ export default function Home() {
       });
     }
 
-    const failed = results
-      .map((result, index) => ({ result, index }))
-      .filter(({ result }) => result.status === "rejected");
+    const failed = results.filter(
+      (result) => result.status === "rejected",
+    );
 
     if (failed.length > 0) {
       setError(
@@ -195,8 +214,12 @@ export default function Home() {
             ? reviewsResult.value
             : previous?.reviews ?? [],
         available: {
-          agents: agentsResult.status === "fulfilled" || previous?.available.agents === true,
-          tools: toolsResult.status === "fulfilled" || previous?.available.tools === true,
+          agents:
+            agentsResult.status === "fulfilled" ||
+            previous?.available.agents === true,
+          tools:
+            toolsResult.status === "fulfilled" ||
+            previous?.available.tools === true,
           dependencies:
             dependenciesResult.status === "fulfilled" ||
             previous?.available.dependencies === true,
@@ -220,114 +243,88 @@ export default function Home() {
     void Promise.resolve().then(loadDashboard);
   }, [loadDashboard]);
 
-  const cards = [
-    {
-      label: "Registered agents",
-      value: data?.available.agents ? data.agents.length : "—",
-      icon: Boxes,
-      detail: "Agents in registry",
-    },
-    {
-      label: "Registered tools",
-      value: data?.available.tools ? data.tools.length : "—",
-      icon: Wrench,
-      detail: "Tools in registry",
-    },
-    {
-      label: "Dependencies",
-      value: data?.available.dependencies ? data.dependencies.length : "—",
-      icon: GitBranch,
-      detail: "Agent-tool relationships",
-    },
-    {
-      label: "Contracts",
-      value: data?.available.contracts ? data.contracts.length : "—",
-      icon: FileSearch,
-      detail: "Contract records returned",
-    },
-    {
-      label: "Governance policies",
-      value: data?.available.policies ? data.policies.length : "—",
-      icon: ShieldCheck,
-      detail: data?.available.policies
-        ? `${data.policies.filter((policy) => policy.enabled).length} enabled`
-        : "Unavailable",
-    },
-  ];
+
+const cards = [
+  {
+    label: "Registered agents",
+    value: data?.available.agents ? data.agents.length : "—",
+    icon: Boxes,
+    detail: "Agents in registry",
+    iconColor: "text-violet-500",
+    iconBackground: "#09090b",
+  },
+  {
+    label: "Registered tools",
+    value: data?.available.tools ? data.tools.length : "—",
+    icon: Wrench,
+    detail: "Tools in registry",
+    iconColor: "text-sky-500",
+    iconBackground: "#09090b",
+  },
+  {
+    label: "Dependencies",
+    value: data?.available.dependencies ? data.dependencies.length : "—",
+    icon: GitBranch,
+    detail: "Agent-tool relationships",
+    iconColor: "text-amber-500",
+    iconBackground: "#09090b",
+  },
+  {
+    label: "Contracts",
+    value: data?.available.contracts ? data.contracts.length : "—",
+    icon: FileSearch,
+    detail: "Contract records returned",
+    iconColor: "text-rose-500",
+    iconBackground: "#09090b",
+  },
+  {
+    label: "Governance policies",
+    value: data?.available.policies ? data.policies.length : "—",
+    icon: ShieldCheck,
+    detail: data?.available.policies
+      ? `${data.policies.filter((policy) => policy.enabled).length} enabled`
+      : "Unavailable",
+    iconColor: "text-emerald-500",
+    iconBackground: "#09090b",
+  },
+];
+
+
+  const heroConnection =
+    connection.status === "connected"
+      ? {
+          status: "connected" as const,
+          application: connection.health.application,
+        }
+      : connection;
 
   return (
     <div className="mx-auto max-w-[1200px] space-y-8">
-      <header className="flex flex-col justify-between gap-4 border-b border-[var(--border)] pb-6 sm:flex-row sm:items-end">
-        <div className="space-y-3">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] px-2.5 py-1 text-xs text-[var(--muted-foreground)]">
-            <span className="size-1.5 rounded-full bg-[var(--foreground)]" />
-            AI agent governance
-          </div>
-          <h1 className="text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">
-            Overview
-          </h1>
-          <p className="max-w-2xl text-sm leading-6 text-[var(--muted-foreground)]">
-            Monitor registered agents and tools, inspect dependencies and track
-            contract release governance.
-          </p>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => void loadDashboard()}
-          disabled={loading}
-          className="inline-flex items-center justify-center gap-2 rounded-md border border-[var(--border)] px-3 py-2 text-sm font-medium hover:bg-[var(--surface-hover)] disabled:opacity-50"
-        >
-          <RefreshCw className={`size-3.5 ${loading ? "animate-spin" : ""}`} />
-          Refresh data
-        </button>
-      </header>
-
-      <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-start gap-3">
-            <div className="flex size-10 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--surface-secondary)]">
-              <Activity className="size-5" />
-            </div>
-            <div>
-              <h2 className="text-sm font-semibold">Backend connection</h2>
-              <p className="mt-1 text-xs text-[var(--muted)]">
-                Live status from Spring Boot.
-              </p>
-            </div>
-          </div>
-
-          {connection.status === "checking" ? (
-            <span className="flex items-center gap-2 text-sm text-[var(--muted)]">
-              <LoaderCircle className="size-4 animate-spin" />
-              Checking…
-            </span>
-          ) : connection.status === "connected" ? (
-            <span className="flex items-center gap-2 text-sm">
-              <CheckCircle2 className="size-4 text-emerald-600 dark:text-emerald-400" />
-              Backend connected · {connection.health.application}
-            </span>
-          ) : (
-            <span className="flex items-center gap-2 text-sm text-red-600 dark:text-red-400">
-              <AlertCircle className="size-4" />
-              {connection.message}
-            </span>
-          )}
-        </div>
-      </section>
+      {/* Overview hero: heading, refresh and backend status appear once */}
+<OverviewHero
+  connection={heroConnection}
+  loading={loading}
+  onRefresh={() => void loadDashboard()}
+/>
 
       {error && (
-        <div role="alert" className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-sm text-amber-700 dark:text-amber-300">
+        <div
+          role="alert"
+          className="rounded-sm border border-amber-500/30 bg-amber-500/5 p-3 text-sm text-amber-700 dark:text-amber-300"
+        >
           {error}
         </div>
       )}
 
+      {/* Platform statistics */}
       <section className="space-y-4">
         <div>
           <p className="text-xs font-medium uppercase tracking-[0.12em] text-[var(--muted)]">
             Live data
           </p>
-          <h2 className="mt-1 text-base font-semibold">Platform overview</h2>
+          <h2 className="mt-1 text-base font-semibold">
+            Platform overview
+          </h2>
           <p className="mt-1 text-sm text-[var(--muted-foreground)]">
             Counts are based on the records returned by your backend APIs.
           </p>
@@ -335,16 +332,23 @@ export default function Home() {
 
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
           {cards.map((card) => (
-            <StatCard key={card.label} {...card} value={loading && !data ? "—" : card.value} />
+            <StatCard
+              key={card.label}
+              {...card}
+              value={loading && !data ? "—" : card.value}
+            />
           ))}
         </div>
       </section>
 
+      {/* Recent reviews and quick actions */}
       <section className="grid gap-5 xl:grid-cols-[1.3fr_0.7fr]">
-        <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+        <div className="rounded-sm border border-[var(--border)] bg-[var(--surface)]">
           <div className="flex items-center justify-between gap-3 border-b border-[var(--border)] p-4">
             <div>
-              <h2 className="text-sm font-semibold">Recent release reviews</h2>
+              <h2 className="text-sm font-semibold">
+                Recent release reviews
+              </h2>
               <p className="mt-1 text-xs text-[var(--muted)]">
                 Latest records returned by the backend.
               </p>
@@ -360,9 +364,7 @@ export default function Home() {
                   : "Reviews are currently unavailable"}
               </p>
               <p className="mt-1 text-xs text-[var(--muted)]">
-                {data?.available.reviews
-                  ? "Create a review to see it listed here."
-                  : "Refresh the dashboard to retry this request."}
+                Refresh the dashboard to retry this request.
               </p>
             </div>
           ) : data.reviews.length === 0 ? (
@@ -416,13 +418,14 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+        <div className="rounded-sm border border-[var(--border)] bg-[var(--surface)]">
           <div className="border-b border-[var(--border)] p-4">
             <h2 className="text-sm font-semibold">Quick actions</h2>
             <p className="mt-1 text-xs text-[var(--muted)]">
               Go directly to a workspace.
             </p>
           </div>
+
           <div className="space-y-2 p-3">
             {[
               {
@@ -439,21 +442,24 @@ export default function Home() {
               },
             ].map((item) => {
               const Icon = item.icon;
+
               return (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="flex items-center gap-3 rounded-lg border border-transparent p-3 transition-colors hover:border-[var(--border)] hover:bg-[var(--surface-secondary)]"
+                  className="flex items-center gap-3 rounded-sm border border-transparent p-3 transition-colors hover:border-[var(--border)] hover:bg-[var(--surface-secondary)]"
                 >
                   <div className="flex size-9 shrink-0 items-center justify-center rounded-md border border-[var(--border)]">
                     <Icon className="size-4" />
                   </div>
+
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium">{item.title}</p>
                     <p className="mt-1 text-xs text-[var(--muted)]">
                       {item.description}
                     </p>
                   </div>
+
                   <ArrowRight className="size-4 text-[var(--muted)]" />
                 </Link>
               );
@@ -461,6 +467,47 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Backend connection — bottom of the dashboard */}
+<section className="flex flex-col gap-4 border border-[var(--border)] bg-[var(--surface)] p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+  <div className="flex items-start gap-3">
+    <div className="flex size-10 shrink-0 items-center justify-center rounded-sm border border-[var(--border)] bg-[var(--surface-secondary)]">
+      <Activity className="size-5" />
+    </div>
+
+    <div>
+      <h2 className="text-sm font-semibold">Backend connection</h2>
+      <p className="mt-1 text-xs text-[var(--muted)]">
+        Live status from Spring Boot.
+      </p>
+    </div>
+  </div>
+
+  <div className="min-w-0 sm:max-w-[55%]">
+    {connection.status === "checking" && (
+      <span className="flex items-center gap-2 text-sm text-[var(--muted)]">
+        <LoaderCircle className="size-4 shrink-0 animate-spin" />
+        Checking backend connection…
+      </span>
+    )}
+
+    {connection.status === "connected" && (
+      <span className="flex items-center gap-2 text-sm">
+        <CheckCircle2 className="size-4 shrink-0 text-emerald-500" />
+        <span className="break-words">
+          Backend connected · {connection.health.application}
+        </span>
+      </span>
+    )}
+
+    {connection.status === "disconnected" && (
+      <span className="flex items-start gap-2 text-sm text-red-500">
+        <AlertCircle className="mt-0.5 size-4 shrink-0" />
+        <span className="break-words">{connection.message}</span>
+      </span>
+    )}
+  </div>
+</section>
     </div>
   );
 }
