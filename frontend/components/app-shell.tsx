@@ -44,8 +44,19 @@ const primaryNavigation = [
     label: "Agent & tool registry",
     href: "/registry",
     icon: Blocks,
-    status: "upcoming",
-    step: "Step 3",
+    status: "available",
+  },
+  {
+    label: "Dependencies",
+    href: "/registry?tab=dependencies",
+    icon: GitBranch,
+    status: "available",
+  },
+  {
+    label: "Policies",
+    href: "/registry?tab=policies",
+    icon: ShieldCheck,
+    status: "available",
   },
 ] as const;
 
@@ -145,20 +156,9 @@ function Sidebar({
           const Icon = item.icon;
           const isActive = pathname === item.href;
 
-          if (item.status === "upcoming") {
-            return (
-              <div
-                key={item.href}
-                title={`${item.label} — planned for ${item.step}`}
-                className="flex cursor-not-allowed items-center gap-3 rounded-md px-3 py-2.5 text-sm text-[var(--muted)] opacity-75"
-                aria-disabled="true"
-              >
-                <Icon className="size-4 shrink-0" />
-                <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                <span className="shrink-0 text-[10px]">{item.step}</span>
-              </div>
-            );
-          }
+          // if (item.status === "upcoming") {
+          //   // renders a disabled item
+          //  }
 
           return (
             <Link

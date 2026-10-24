@@ -2,6 +2,7 @@
 package com.reachonline.backend.registry.repository;
 
 import com.reachonline.backend.registry.model.AgentToolDependency;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -11,6 +12,10 @@ import java.util.UUID;
 
 public interface AgentToolDependencyRepository
         extends JpaRepository<AgentToolDependency, UUID> {
+
+    @EntityGraph(attributePaths = {"agent", "tool"})
+    @Override
+    List<AgentToolDependency> findAll();
 
     @Query("""
         SELECT dependency
