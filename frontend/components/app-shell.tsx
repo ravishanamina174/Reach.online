@@ -16,9 +16,10 @@ import {
   ShieldCheck,
   X,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
 import { useTheme } from "next-themes";
+
 
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -37,8 +38,7 @@ const primaryNavigation = [
     label: "Contract review",
     href: "/contract-review",
     icon: FileSearch,
-    status: "upcoming",
-    step: "Step 2",
+    status: "available",
   },
   {
     label: "Agent & tool registry",
@@ -51,11 +51,12 @@ const primaryNavigation = [
 
 function BrandLogo() {
   const { resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  
+  const mounted = useSyncExternalStore(
+  () => () => {},
+  () => true,
+  () => false,
+);
 
   const logoSrc =
     mounted && resolvedTheme === "light"
@@ -142,8 +143,7 @@ function Sidebar({
 
         {primaryNavigation.map((item) => {
           const Icon = item.icon;
-          const isActive =
-            item.status === "available" && pathname === item.href;
+          const isActive = pathname === item.href;
 
           if (item.status === "upcoming") {
             return (
@@ -228,9 +228,6 @@ export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  useEffect(() => {
-    setMobileOpen(false);
-  }, [pathname]);
 
   useEffect(() => {
     if (!mobileOpen) return;

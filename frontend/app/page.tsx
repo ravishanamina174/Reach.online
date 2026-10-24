@@ -153,9 +153,9 @@ export default function Home() {
     }
   }, []);
 
-  useEffect(() => {
-    void refreshConnection();
-  }, [refreshConnection]);
+useEffect(() => {
+  void Promise.resolve().then(refreshConnection);
+}, [refreshConnection]);
 
   return (
     <div className="mx-auto max-w-[1200px] space-y-8">
