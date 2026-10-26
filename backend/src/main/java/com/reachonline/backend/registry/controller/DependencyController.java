@@ -19,6 +19,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import jakarta.servlet.http.HttpServletRequest;
+import com.reachonline.backend.security.WorkspaceContext;
+import com.reachonline.backend.security.WorkspaceRequest;
 
 @RestController
 @RequestMapping("/api/registry/dependencies")
@@ -40,31 +43,40 @@ public class DependencyController {
 
     @GetMapping
     @Transactional(readOnly = true)
-    public ApiResponse<List<AgentToolDependency>> listDependencies() {
-        return ApiResponse.of(dependencyRepository.findAll());
+    public ApiResponse<List<AgentToolDependency>> listDependencies(
+            HttpServletRequest request
+    ) {
+        WorkspaceContext.Workspace workspace = WorkspaceRequest.from(request);
+        return ApiResponse.of(dependencyRepository.findAllByOwnerUserIdWithAgentsAndTools(
+                WorkspaceContext.ownerFor(workspace)
+        ));
     }
 
     @PostMapping
     @Transactional
     public ResponseEntity<ApiResponse<AgentToolDependency>> createDependency(
-            @Valid @RequestBody CreateDependencyRequest request
+            @Valid @RequestBody CreateDependencyRequest request,
+            HttpServletRequest httpRequest
     ) {
+        WorkspaceContext.Workspace workspace = WorkspaceRequest.from(httpRequest);
+        WorkspaceContext.requireManagement(workspace);
+        String owner = WorkspaceContext.ownerFor(workspace);
         Agent agent = agentRepository
-                .findByNameIgnoreCase(request.agentName().trim())
+                .findByNameIgnoreCaseAndOwnerUserId(request.agentName().trim(), owner)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Registered agent was not found"
                 ));
 
         Tool tool = toolRepository
-                .findByNameIgnoreCase(request.toolName().trim())
+                .findByNameIgnoreCaseAndOwnerUserId(request.toolName().trim(), owner)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Registered tool was not found"
                 ));
 
         boolean alreadyExists = dependencyRepository
-                .findByToolNameWithAgent(tool.getName())
+                .findByToolNameWithAgentAndOwner(tool.getName(), owner)
                 .stream()
                 .anyMatch(dependency ->
                         dependency.getAgent().getId().equals(agent.getId())
@@ -80,7 +92,8 @@ public class DependencyController {
         AgentToolDependency dependency = new AgentToolDependency(
                 agent,
                 tool,
-                request.consumerExpectations().trim()
+                request.consumerExpectations().trim(),
+                owner
         );
 
         try {

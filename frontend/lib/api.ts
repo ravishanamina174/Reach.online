@@ -2,6 +2,22 @@ const API_BASE_URL = (
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080"
 ).replace(/\/+$/, "");
 const REQUEST_TIMEOUT_MS = 15_000;
+let tokenProvider: (() => Promise<string | null>) | null = null;
+let selectedWorkspace: "demo" | "personal" = "demo";
+
+export function setAuthTokenProvider(
+  provider: (() => Promise<string | null>) | null,
+) {
+  tokenProvider = provider;
+}
+
+export function setWorkspace(workspace: "demo" | "personal") {
+  selectedWorkspace = workspace;
+}
+
+export function getWorkspace() {
+  return selectedWorkspace;
+}
 
 export type ApiResponse<T> = {
   data: T;
@@ -82,11 +98,14 @@ export async function apiRequest<T>(
   let response: Response;
 
   try {
+    const token = tokenProvider ? await tokenProvider() : null;
     response = await fetch(`${API_BASE_URL}${normalizedPath}`, {
       ...init,
       signal: controller.signal,
       headers: {
         Accept: "application/json",
+        "X-Reach-Workspace": selectedWorkspace,
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...(init.body ? { "Content-Type": "application/json" } : {}),
         ...init.headers,
       },

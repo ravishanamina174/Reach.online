@@ -37,7 +37,8 @@ public class ContractDiffService {
     public ContractDiffResponse compare(
             String name,
             String fromVersion,
-            String toVersion
+            String toVersion,
+            String ownerUserId
     ) {
         if (fromVersion.equals(toVersion)) {
             throw new ResponseStatusException(
@@ -47,14 +48,14 @@ public class ContractDiffService {
         }
 
         Contract from = repository
-                .findByNameAndVersion(name, fromVersion)
+                .findByNameAndVersionAndOwnerUserId(name, fromVersion, ownerUserId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Source contract version was not found"
                 ));
 
         Contract to = repository
-                .findByNameAndVersion(name, toVersion)
+                .findByNameAndVersionAndOwnerUserId(name, toVersion, ownerUserId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Target contract version was not found"

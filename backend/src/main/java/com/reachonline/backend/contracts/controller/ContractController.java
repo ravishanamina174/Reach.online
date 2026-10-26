@@ -8,6 +8,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import jakarta.servlet.http.HttpServletRequest;
+import com.reachonline.backend.security.WorkspaceContext;
+import com.reachonline.backend.security.WorkspaceRequest;
 
 @RestController
 @RequestMapping("/api/contracts")
@@ -21,9 +24,14 @@ public class ContractController {
 
     @PostMapping
     public ResponseEntity<ContractResponse> create(
-        @Valid @RequestBody CreateContractRequest request
+        @Valid @RequestBody CreateContractRequest request,
+        HttpServletRequest httpRequest
     ) {
-        ContractResponse response = contractService.create(request);
+        WorkspaceContext.Workspace workspace = WorkspaceRequest.from(httpRequest);
+        WorkspaceContext.requireManagement(workspace);
+        ContractResponse response = contractService.create(
+                request, WorkspaceContext.ownerFor(workspace)
+        );
 
         return ResponseEntity
             .status(HttpStatus.CREATED)
@@ -31,22 +39,26 @@ public class ContractController {
     }
 
     @GetMapping
-    public List<ContractResponse> findAll() {
-        return contractService.findAll();
+    public List<ContractResponse> findAll(HttpServletRequest request) {
+        return contractService.findAll(WorkspaceContext.ownerFor(WorkspaceRequest.from(request)));
     }
 
     @GetMapping("/{name}/versions")
     public List<ContractResponse> findVersions(
-        @PathVariable String name
+        @PathVariable String name,
+        HttpServletRequest request
     ) {
-        return contractService.findVersions(name);
+        return contractService.findVersions(name, WorkspaceContext.ownerFor(WorkspaceRequest.from(request)));
     }
 
     @GetMapping("/{name}/versions/{version}")
     public ContractResponse findVersion(
         @PathVariable String name,
-        @PathVariable String version
+        @PathVariable String version,
+        HttpServletRequest request
     ) {
-        return contractService.findVersion(name, version);
+        return contractService.findVersion(
+                name, version, WorkspaceContext.ownerFor(WorkspaceRequest.from(request))
+        );
     }
 }

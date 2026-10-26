@@ -9,6 +9,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
+import jakarta.servlet.http.HttpServletRequest;
+import com.reachonline.backend.security.WorkspaceContext;
+import com.reachonline.backend.security.WorkspaceRequest;
 
 @RestController
 @RequestMapping("/api/release-reviews")
@@ -25,18 +28,30 @@ public class ReleaseReviewController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ReleaseReviewResponse createReview(
-            @Valid @RequestBody CreateReleaseReviewRequest request
+            @Valid @RequestBody CreateReleaseReviewRequest request,
+            HttpServletRequest httpRequest
     ) {
-        return releaseReviewService.createReview(request);
+        WorkspaceContext.Workspace workspace = WorkspaceRequest.from(httpRequest);
+        return releaseReviewService.createReview(
+                request,
+                WorkspaceContext.ownerFor(workspace)
+        );
     }
 
     @GetMapping
-    public List<ReleaseReviewResponse> getAllReviews() {
-        return releaseReviewService.getAllReviews();
+    public List<ReleaseReviewResponse> getAllReviews(HttpServletRequest request) {
+        return releaseReviewService.getAllReviews(
+                WorkspaceContext.ownerFor(WorkspaceRequest.from(request))
+        );
     }
 
     @GetMapping("/{id}")
-    public ReleaseReviewResponse getReview(@PathVariable UUID id) {
-        return releaseReviewService.getReview(id);
+    public ReleaseReviewResponse getReview(
+            @PathVariable UUID id,
+            HttpServletRequest request
+    ) {
+        return releaseReviewService.getReview(
+                id, WorkspaceContext.ownerFor(WorkspaceRequest.from(request))
+        );
     }
 }

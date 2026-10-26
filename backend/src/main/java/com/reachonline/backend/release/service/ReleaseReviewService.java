@@ -49,7 +49,8 @@ public class ReleaseReviewService {
 
     @Transactional
     public ReleaseReviewResponse createReview(
-            CreateReleaseReviewRequest request
+            CreateReleaseReviewRequest request,
+            String ownerUserId
     ) {
         if (request.fromVersion().equals(request.proposedVersion())) {
             throw new ResponseStatusException(
@@ -59,9 +60,10 @@ public class ReleaseReviewService {
         }
 
         Contract proposedContract = contractRepository
-                .findByNameAndVersion(
+                .findByNameAndVersionAndOwnerUserId(
                         request.contractName(),
-                        request.proposedVersion()
+                        request.proposedVersion(),
+                        ownerUserId
                 )
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
@@ -73,12 +75,13 @@ public class ReleaseReviewService {
                 contractImpactService.analyze(
                         request.contractName(),
                         request.fromVersion(),
-                        request.proposedVersion()
+                        request.proposedVersion(),
+                        ownerUserId
                 );
 
         // Reuse Phase 2.4: evaluate enabled governance policies.
         GovernanceEvaluationResponse governance =
-                governanceEvaluationService.evaluate(impact);
+                governanceEvaluationService.evaluate(impact, ownerUserId);
 
         String findingsJson = serializeFindings(impact, governance);
 
@@ -87,7 +90,8 @@ public class ReleaseReviewService {
                 request.fromVersion(),
                 request.proposedVersion(),
                 governance.decision(),
-                findingsJson
+                findingsJson,
+                ownerUserId
         );
 
         // Mark the review as completed and persist the result.
@@ -99,17 +103,20 @@ public class ReleaseReviewService {
     }
 
     @Transactional(readOnly = true)
-    public List<ReleaseReviewResponse> getAllReviews() {
+    public List<ReleaseReviewResponse> getAllReviews(String ownerUserId) {
         return releaseReviewRepository
-                .findAllByOrderByCreatedAtDesc()
+                .findAllByOwnerUserIdOrderByCreatedAtDesc(ownerUserId)
                 .stream()
                 .map(this::toResponse)
                 .toList();
     }
 
     @Transactional(readOnly = true)
-    public ReleaseReviewResponse getReview(UUID id) {
-        ReleaseReview review = releaseReviewRepository.findById(id)
+    public ReleaseReviewResponse getReview(UUID id, String ownerUserId) {
+        ReleaseReview review = releaseReviewRepository.findAllByOwnerUserIdOrderByCreatedAtDesc(ownerUserId)
+                .stream()
+                .filter(candidate -> candidate.getId().equals(id))
+                .findFirst()
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Release review was not found."

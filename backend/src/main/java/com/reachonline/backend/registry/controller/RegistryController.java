@@ -8,9 +8,13 @@ import com.reachonline.backend.registry.repository.ToolRepository;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import jakarta.servlet.http.HttpServletRequest;
+import com.reachonline.backend.security.WorkspaceContext;
+import com.reachonline.backend.security.WorkspaceRequest;
 
 @RestController
 @RequestMapping("/api/registry")
@@ -28,18 +32,29 @@ public class RegistryController {
     }
 
     @GetMapping("/agents")
-    public ApiResponse<List<Agent>> listAgents() {
-        return ApiResponse.of(agentRepository.findAll());
+    public ApiResponse<List<Agent>> listAgents(HttpServletRequest request) {
+        WorkspaceContext.Workspace workspace = WorkspaceRequest.from(request);
+        return ApiResponse.of(agentRepository.findAllByOwnerUserId(
+                WorkspaceContext.ownerFor(workspace)
+        ));
     }
 
     @PostMapping("/agents")
     public ResponseEntity<ApiResponse<Agent>> createAgent(
-            @Valid @RequestBody CreateAgentRequest request
+            @Valid @RequestBody CreateAgentRequest request,
+            HttpServletRequest httpRequest
     ) {
+        WorkspaceContext.Workspace workspace = WorkspaceRequest.from(httpRequest);
+        WorkspaceContext.requireManagement(workspace);
+        String owner = WorkspaceContext.ownerFor(workspace);
+        if (agentRepository.existsByNameIgnoreCaseAndOwnerUserId(request.name().trim(), owner)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "An agent with this name already exists.");
+        }
         Agent agent = new Agent(
                 request.name().trim(),
                 request.description(),
-                request.agentType().trim()
+                request.agentType().trim(),
+                owner
         );
 
         Agent saved = agentRepository.save(agent);
@@ -49,19 +64,30 @@ public class RegistryController {
     }
 
     @GetMapping("/tools")
-    public ApiResponse<List<Tool>> listTools() {
-        return ApiResponse.of(toolRepository.findAll());
+    public ApiResponse<List<Tool>> listTools(HttpServletRequest request) {
+        WorkspaceContext.Workspace workspace = WorkspaceRequest.from(request);
+        return ApiResponse.of(toolRepository.findAllByOwnerUserId(
+                WorkspaceContext.ownerFor(workspace)
+        ));
     }
 
     @PostMapping("/tools")
     public ResponseEntity<ApiResponse<Tool>> createTool(
-            @Valid @RequestBody CreateToolRequest request
+            @Valid @RequestBody CreateToolRequest request,
+            HttpServletRequest httpRequest
     ) {
+        WorkspaceContext.Workspace workspace = WorkspaceRequest.from(httpRequest);
+        WorkspaceContext.requireManagement(workspace);
+        String owner = WorkspaceContext.ownerFor(workspace);
+        if (toolRepository.existsByNameIgnoreCaseAndOwnerUserId(request.name().trim(), owner)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "A tool with this name already exists.");
+        }
         Tool tool = new Tool(
                 request.name().trim(),
                 request.description(),
                 request.protocol().trim(),
-                request.endpoint()
+                request.endpoint(),
+                owner
         );
 
         Tool saved = toolRepository.save(tool);

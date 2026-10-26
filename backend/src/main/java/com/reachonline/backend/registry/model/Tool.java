@@ -12,7 +12,10 @@ public class Tool {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false, unique = true, length = 120)
+    @Column(name = "owner_user_id", length = 255)
+    private String ownerUserId;
+
+    @Column(nullable = false, length = 120)
     private String name;
 
     @Column(length = 1000)
@@ -48,6 +51,17 @@ public class Tool {
         this.status = "ACTIVE";
     }
 
+    public Tool(
+            String name,
+            String description,
+            String protocol,
+            String endpoint,
+            String ownerUserId
+    ) {
+        this(name, description, protocol, endpoint);
+        this.ownerUserId = ownerUserId;
+    }
+
     @PrePersist
     protected void onCreate() {
         Instant now = Instant.now();
@@ -61,6 +75,7 @@ public class Tool {
     }
 
     public UUID getId() { return id; }
+    public String getOwnerUserId() { return ownerUserId; }
     public String getName() { return name; }
     public String getDescription() { return description; }
     public String getProtocol() { return protocol; }

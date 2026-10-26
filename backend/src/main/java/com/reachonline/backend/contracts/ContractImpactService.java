@@ -34,16 +34,18 @@ public class ContractImpactService {
     public ContractImpactResponse analyze(
             String contractName,
             String fromVersion,
-            String toVersion
+            String toVersion,
+            String ownerUserId
     ) {
         ContractDiffResponse diff = contractDiffService.compare(
                 contractName,
                 fromVersion,
-                toVersion
+                toVersion,
+                ownerUserId
         );
 
         boolean toolRegistered =
-                toolRepository.existsByNameIgnoreCase(contractName);
+                toolRepository.existsByNameIgnoreCaseAndOwnerUserId(contractName, ownerUserId);
 
         if (!diff.hasChanges()) {
             return new ContractImpactResponse(
@@ -78,7 +80,7 @@ public class ContractImpactService {
         }
 
         List<AgentToolDependency> dependencies =
-                dependencyRepository.findByToolNameWithAgent(contractName);
+                dependencyRepository.findByToolNameWithAgentAndOwner(contractName, ownerUserId);
 
         List<String> changedPaths = diff.changes()
                 .stream()

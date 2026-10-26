@@ -8,6 +8,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import jakarta.servlet.http.HttpServletRequest;
+import com.reachonline.backend.security.WorkspaceContext;
+import com.reachonline.backend.security.WorkspaceRequest;
 
 @RestController
 @RequestMapping("/api/contracts")
@@ -25,8 +28,12 @@ public class ContractImpactController {
     public ContractImpactResponse analyzeImpact(
             @PathVariable String name,
             @RequestParam String fromVersion,
-            @RequestParam String toVersion
+            @RequestParam String toVersion,
+            HttpServletRequest request
     ) {
-        return impactService.analyze(name, fromVersion, toVersion);
+        return impactService.analyze(
+                name, fromVersion, toVersion,
+                WorkspaceContext.ownerFor(WorkspaceRequest.from(request))
+        );
     }
 }

@@ -25,6 +25,9 @@ public class Contract {
     @Id
     private UUID id;
 
+    @Column(name = "owner_user_id", length = 255)
+    private String ownerUserId;
+
     @Column(nullable = false, length = 160)
     private String name;
 
@@ -58,6 +61,17 @@ public class Contract {
         this.content = content;
     }
 
+    public Contract(
+        String name,
+        String contractType,
+        String version,
+        String content,
+        String ownerUserId
+    ) {
+        this(name, contractType, version, content);
+        this.ownerUserId = ownerUserId;
+    }
+
     @PrePersist
     protected void onCreate() {
         if (id == null) {
@@ -76,6 +90,10 @@ public class Contract {
 
     public UUID getId() {
         return id;
+    }
+
+    public String getOwnerUserId() {
+        return ownerUserId;
     }
 
     public String getName() {

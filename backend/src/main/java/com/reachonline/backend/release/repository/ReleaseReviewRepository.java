@@ -10,4 +10,6 @@ public interface ReleaseReviewRepository
         extends JpaRepository<ReleaseReview, UUID> {
 
     List<ReleaseReview> findAllByOrderByCreatedAtDesc();
+
+    List<ReleaseReview> findAllByOwnerUserIdOrderByCreatedAtDesc(String ownerUserId);
 }

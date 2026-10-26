@@ -17,6 +17,9 @@ public class ReleaseReview {
     @Id
     private UUID id;
 
+    @Column(name = "owner_user_id", length = 255)
+    private String ownerUserId;
+
     @Column(name = "contract_id")
     private UUID contractId;
 
@@ -55,6 +58,18 @@ public class ReleaseReview {
         this.findings = findings;
     }
 
+    public ReleaseReview(
+            UUID contractId,
+            String baselineVersion,
+            String proposedVersion,
+            String status,
+            String findings,
+            String ownerUserId
+    ) {
+        this(contractId, baselineVersion, proposedVersion, status, findings);
+        this.ownerUserId = ownerUserId;
+    }
+
     @PrePersist
     protected void onCreate() {
         if (id == null) {
@@ -79,6 +94,10 @@ public class ReleaseReview {
 
     public UUID getId() {
         return id;
+    }
+
+    public String getOwnerUserId() {
+        return ownerUserId;
     }
 
     public UUID getContractId() {

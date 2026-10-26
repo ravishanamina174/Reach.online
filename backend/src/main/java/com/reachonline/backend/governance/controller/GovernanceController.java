@@ -13,6 +13,9 @@ import tools.jackson.databind.json.JsonMapper;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
+import jakarta.servlet.http.HttpServletRequest;
+import com.reachonline.backend.security.WorkspaceContext;
+import com.reachonline.backend.security.WorkspaceRequest;
 
 @RestController
 @RequestMapping("/api/governance")
@@ -39,15 +42,21 @@ public class GovernanceController {
     }
 
     @GetMapping("/policies")
-    public List<GovernancePolicy> getPolicies() {
-        return policyRepository.findAllByOrderByCreatedAtDesc();
+    public List<GovernancePolicy> getPolicies(HttpServletRequest request) {
+        return policyRepository.findAllByOwnerUserIdOrderByCreatedAtDesc(
+                WorkspaceContext.ownerFor(WorkspaceRequest.from(request))
+        );
     }
 
     @PostMapping("/policies")
     @ResponseStatus(HttpStatus.CREATED)
     public GovernancePolicy createPolicy(
-            @Valid @RequestBody CreateGovernancePolicyRequest request
+            @Valid @RequestBody CreateGovernancePolicyRequest request,
+            HttpServletRequest httpRequest
     ) {
+        WorkspaceContext.Workspace workspace = WorkspaceRequest.from(httpRequest);
+        WorkspaceContext.requireManagement(workspace);
+        String owner = WorkspaceContext.ownerFor(workspace);
         String ruleType = request.ruleType()
                 .trim()
                 .toUpperCase(Locale.ROOT);
@@ -60,7 +69,7 @@ public class GovernanceController {
             );
         }
 
-        if (policyRepository.existsByNameIgnoreCase(request.name().trim())) {
+        if (policyRepository.existsByNameIgnoreCaseAndOwnerUserId(request.name().trim(), owner)) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
                     "A governance policy with this name already exists."
@@ -74,7 +83,8 @@ public class GovernanceController {
                 request.description(),
                 ruleType,
                 request.configuration(),
-                request.enabled()
+                request.enabled(),
+                owner
         );
 
         return policyRepository.save(policy);
@@ -83,9 +93,16 @@ public class GovernanceController {
     @PatchMapping("/policies/{id}/enabled")
     public GovernancePolicy setPolicyEnabled(
             @PathVariable UUID id,
-            @RequestParam boolean enabled
+            @RequestParam boolean enabled,
+            HttpServletRequest httpRequest
     ) {
-        GovernancePolicy policy = policyRepository.findById(id)
+        WorkspaceContext.Workspace workspace = WorkspaceRequest.from(httpRequest);
+        WorkspaceContext.requireManagement(workspace);
+        GovernancePolicy policy = policyRepository.findAllByOwnerUserIdOrderByCreatedAtDesc(
+                        WorkspaceContext.ownerFor(workspace)
+                ).stream()
+                .filter(candidate -> candidate.getId().equals(id))
+                .findFirst()
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Governance policy not found."
@@ -98,9 +115,13 @@ public class GovernanceController {
 
     @PostMapping("/evaluate")
     public GovernanceEvaluationResponse evaluate(
-            @Valid @RequestBody GovernanceEvaluationRequest request
+            @Valid @RequestBody GovernanceEvaluationRequest request,
+            HttpServletRequest httpRequest
     ) {
-        return evaluationService.evaluate(request.impact());
+        return evaluationService.evaluate(
+                request.impact(),
+                WorkspaceContext.ownerFor(WorkspaceRequest.from(httpRequest))
+        );
     }
 
     private void validateConfiguration(

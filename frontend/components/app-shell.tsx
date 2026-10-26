@@ -4,10 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Activity,
-  ArrowUpRight,
   Blocks,
-  ChevronDown,
   Command,
   FileSearch,
   GitBranch,
@@ -19,13 +16,22 @@ import {
 import { useEffect, useState, useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
 import { useTheme } from "next-themes";
+import { useClerk, useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 
 
 import { ThemeToggle } from "@/components/theme-toggle";
+import { setWorkspace } from "@/lib/api";
 
 type AppShellProps = {
   children: ReactNode;
 };
+
+const WORKSPACE_STORAGE_PREFIX = "reach.workspace:";
+
+function workspaceStorageKey(userId: string) {
+  return `${WORKSPACE_STORAGE_PREFIX}${userId}`;
+}
 
 const primaryNavigation = [
   {
@@ -56,6 +62,12 @@ const primaryNavigation = [
     label: "Policies",
     href: "/registry?tab=policies",
     icon: ShieldCheck,
+    status: "available",
+  },
+  {
+    label: "Profiles",
+    href: "/profiles",
+    icon: Command,
     status: "available",
   },
 ] as const;
@@ -101,6 +113,42 @@ function Sidebar({
   mobile?: boolean;
   onNavigate?: () => void;
 }) {
+  const { user } = useUser();
+  const { signOut } = useClerk();
+  const router = useRouter();
+  const [workspace, setCurrentWorkspace] = useState<"demo" | "personal">(
+    "demo",
+  );
+  const displayName =
+    user?.fullName ?? user?.firstName ?? user?.primaryEmailAddress?.emailAddress ?? "Account";
+  const initials = displayName
+    .split(/\s+/)
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+  useEffect(() => {
+    if (!user) return;
+    const stored = window.localStorage.getItem(workspaceStorageKey(user.id));
+    const nextWorkspace =
+      stored === "demo" || stored === "personal" ? stored : "demo";
+    // The sidebar must follow the newly loaded Clerk identity and its storage key.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setCurrentWorkspace(nextWorkspace);
+    setWorkspace(nextWorkspace);
+  }, [user]);
+
+  function changeWorkspace(next: "demo" | "personal") {
+    if (!user) {
+      return;
+    }
+    window.localStorage.setItem(workspaceStorageKey(user.id), next);
+    setWorkspace(next);
+    setCurrentWorkspace(next);
+    router.push("/contract-review");
+  }
+
   return (
     <div className="flex h-full flex-col">
       <div className="flex h-[65px] items-center justify-between border-b border-[var(--border)] px-5">
@@ -123,8 +171,7 @@ function Sidebar({
           Workspace
         </div>
 
-        <button
-          type="button"
+        <div
           className="flex w-full items-center gap-2 rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 text-left transition-colors hover:bg-[var(--surface-hover)]"
         >
           <span className="flex size-7 shrink-0 items-center justify-center rounded-md border border-[var(--border)] bg-[var(--surface-secondary)]">
@@ -133,15 +180,25 @@ function Sidebar({
 
           <span className="min-w-0 flex-1">
             <span className="block truncate text-sm font-medium">
-              Reach Workspace
+              {workspace === "demo" ? "Demo Workspace" : "Personal Workspace"}
             </span>
             <span className="block truncate text-xs text-[var(--muted)]">
               Governance platform
             </span>
           </span>
 
-          <ChevronDown className="size-4 shrink-0 text-[var(--muted)]" />
-        </button>
+          <select
+            aria-label="Select workspace"
+            value={workspace}
+            onChange={(event) =>
+              changeWorkspace(event.target.value as "demo" | "personal")
+            }
+            className="max-w-6 rounded-sm bg-transparent text-[var(--muted)] outline-none"
+          >
+            <option value="demo">Demo</option>
+            <option value="personal">Personal</option>
+          </select>
+        </div>
       </div>
 
       <nav
@@ -181,16 +238,37 @@ function Sidebar({
 
       <div className="border-t border-[var(--border)] p-4">
         <div className="flex items-center gap-2 rounded-md px-2 py-2">
-          <span className="flex size-8 shrink-0 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-secondary)]">
-            <Activity className="size-4 text-[var(--muted-foreground)]" />
-          </span>
+          {user?.imageUrl ? (
+            <img
+              src={user.imageUrl}
+              alt={displayName}
+              className="size-8 rounded-full border border-[var(--border)] object-cover"
+            />
+          ) : (
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-secondary)] text-xs font-semibold">
+              {initials}
+            </span>
+          )}
           <span className="min-w-0 flex-1">
-            <span className="block text-xs font-medium">Developer workspace</span>
-            <span className="block text-xs text-[var(--muted)]">
+            <span className="block truncate text-xs font-medium">{displayName}</span>
+            <span className="flex items-center gap-1 text-xs text-[var(--muted)]">
+              <span className="size-1.5 rounded-full bg-emerald-500" />
               Online
             </span>
           </span>
-          <ArrowUpRight className="size-3.5 text-[var(--muted)]" />
+          <Link
+            href="/profile"
+            className="rounded-sm px-1.5 py-1 text-xs text-[var(--muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--foreground)]"
+          >
+            Profile
+          </Link>
+          <button
+            type="button"
+            onClick={() => void signOut()}
+            className="rounded-sm px-1.5 py-1 text-xs text-[var(--muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--foreground)]"
+          >
+            Sign out
+          </button>
         </div>
       </div>
     </div>

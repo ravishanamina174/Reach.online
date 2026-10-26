@@ -28,4 +28,32 @@ public interface AgentToolDependencyRepository
     List<AgentToolDependency> findByToolNameWithAgent(
             @Param("toolName") String toolName
     );
+
+    @Query("""
+        SELECT dependency
+        FROM AgentToolDependency dependency
+        JOIN FETCH dependency.agent
+        JOIN FETCH dependency.tool
+        WHERE dependency.ownerUserId = :ownerUserId
+           OR (:ownerUserId = '__DEMO__' AND dependency.ownerUserId IS NULL)
+        ORDER BY dependency.agent.name ASC
+        """)
+    List<AgentToolDependency> findAllByOwnerUserIdWithAgentsAndTools(
+            @Param("ownerUserId") String ownerUserId
+    );
+
+    @Query("""
+        SELECT dependency
+        FROM AgentToolDependency dependency
+        JOIN FETCH dependency.agent
+        JOIN FETCH dependency.tool
+        WHERE LOWER(dependency.tool.name) = LOWER(:toolName)
+          AND (dependency.ownerUserId = :ownerUserId
+           OR (:ownerUserId = '__DEMO__' AND dependency.ownerUserId IS NULL))
+        ORDER BY dependency.agent.name ASC
+        """)
+    List<AgentToolDependency> findByToolNameWithAgentAndOwner(
+            @Param("toolName") String toolName,
+            @Param("ownerUserId") String ownerUserId
+    );
 }

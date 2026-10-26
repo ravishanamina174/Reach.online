@@ -30,12 +30,12 @@ public class ContractService {
     }
 
     @Transactional
-    public ContractResponse create(CreateContractRequest request) {
+    public ContractResponse create(CreateContractRequest request, String ownerUserId) {
         validateContent(request.content());
 
-        if (repository.existsByNameAndVersion(
+        if (repository.existsByNameAndVersionAndOwnerUserId(
             request.name(),
-            request.version()
+            request.version(), ownerUserId
         )) {
             throw new ResponseStatusException(
                 HttpStatus.CONFLICT,
@@ -58,7 +58,8 @@ public class ContractService {
             request.name().trim(),
             request.contractType(),
             request.version(),
-            content
+            content,
+            ownerUserId
         );
 
         try {
@@ -76,8 +77,8 @@ public class ContractService {
     }
 
     @Transactional(readOnly = true)
-    public List<ContractResponse> findAll() {
-        return repository.findAllByOrderByNameAscVersionAsc()
+    public List<ContractResponse> findAll(String ownerUserId) {
+        return repository.findAllByOwnerUserIdOrderByNameAscVersionAsc(ownerUserId)
             .stream()
             .<ContractResponse>map(
     contract -> ContractResponse.from(contract, objectMapper)
@@ -86,9 +87,9 @@ public class ContractService {
     }
 
     @Transactional(readOnly = true)
-    public List<ContractResponse> findVersions(String name) {
+    public List<ContractResponse> findVersions(String name, String ownerUserId) {
         List<Contract> contracts =
-            repository.findByNameOrderByCreatedAtDesc(name);
+            repository.findByNameAndOwnerUserIdOrderByCreatedAtDesc(name, ownerUserId);
 
         if (contracts.isEmpty()) {
             throw new ResponseStatusException(
@@ -105,8 +106,8 @@ public class ContractService {
     }
 
     @Transactional(readOnly = true)
-    public ContractResponse findVersion(String name, String version) {
-        Contract contract = repository.findByNameAndVersion(name, version)
+    public ContractResponse findVersion(String name, String version, String ownerUserId) {
+        Contract contract = repository.findByNameAndVersionAndOwnerUserId(name, version, ownerUserId)
             .orElseThrow(() -> new ResponseStatusException(
                 HttpStatus.NOT_FOUND,
                 "Contract version not found"

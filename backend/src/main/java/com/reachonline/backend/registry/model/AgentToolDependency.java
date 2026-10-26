@@ -8,16 +8,16 @@ import java.util.UUID;
 @Entity
 @Table(
     name = "agent_tool_dependencies",
-    uniqueConstraints = @UniqueConstraint(
-        name = "uq_agent_tool",
-        columnNames = {"agent_id", "tool_id"}
-    )
+    uniqueConstraints = {}
 )
 public class AgentToolDependency {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
+
+    @Column(name = "owner_user_id", length = 255)
+    private String ownerUserId;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "agent_id", nullable = false)
@@ -46,6 +46,16 @@ public class AgentToolDependency {
         this.consumerExpectations = consumerExpectations;
     }
 
+    public AgentToolDependency(
+            Agent agent,
+            Tool tool,
+            String consumerExpectations,
+            String ownerUserId
+    ) {
+        this(agent, tool, consumerExpectations);
+        this.ownerUserId = ownerUserId;
+    }
+
     @PrePersist
     protected void onCreate() {
         createdAt = Instant.now();
@@ -53,6 +63,10 @@ public class AgentToolDependency {
 
     public UUID getId() {
         return id;
+    }
+
+    public String getOwnerUserId() {
+        return ownerUserId;
     }
 
     public Agent getAgent() {

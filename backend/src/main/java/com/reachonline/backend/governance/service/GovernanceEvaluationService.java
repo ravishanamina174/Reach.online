@@ -43,7 +43,8 @@ public class GovernanceEvaluationService {
     }
 
     public GovernanceEvaluationResponse evaluate(
-            ContractImpactResponse impact
+            ContractImpactResponse impact,
+            String ownerUserId
     ) {
         if (impact == null) {
             throw new ResponseStatusException(
@@ -53,7 +54,7 @@ public class GovernanceEvaluationService {
         }
 
         List<GovernancePolicy> enabledPolicies =
-                policyRepository.findAllByOrderByCreatedAtDesc()
+                policyRepository.findAllByOwnerUserIdOrderByCreatedAtDesc(ownerUserId)
                         .stream()
                         .filter(GovernancePolicy::isEnabled)
                         .toList();

@@ -12,4 +12,7 @@ public interface GovernancePolicyRepository
     boolean existsByNameIgnoreCase(String name);
 
     List<GovernancePolicy> findAllByOrderByCreatedAtDesc();
+
+    boolean existsByNameIgnoreCaseAndOwnerUserId(String name, String ownerUserId);
+    List<GovernancePolicy> findAllByOwnerUserIdOrderByCreatedAtDesc(String ownerUserId);
 }

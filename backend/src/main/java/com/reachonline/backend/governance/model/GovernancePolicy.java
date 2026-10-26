@@ -26,7 +26,10 @@ public class GovernancePolicy {
     @Id
     private UUID id;
 
-    @Column(nullable = false, unique = true, length = 160)
+    @Column(name = "owner_user_id", length = 255)
+    private String ownerUserId;
+
+    @Column(nullable = false, length = 160)
     private String name;
 
     @Column(length = 1000)
@@ -64,6 +67,18 @@ public class GovernancePolicy {
         this.enabled = enabled;
     }
 
+    public GovernancePolicy(
+            String name,
+            String description,
+            String ruleType,
+            String configuration,
+            boolean enabled,
+            String ownerUserId
+    ) {
+        this(name, description, ruleType, configuration, enabled);
+        this.ownerUserId = ownerUserId;
+    }
+
     @PrePersist
     protected void onCreate() {
         if (id == null) {
@@ -86,6 +101,10 @@ public class GovernancePolicy {
 
     public UUID getId() {
         return id;
+    }
+
+    public String getOwnerUserId() {
+        return ownerUserId;
     }
 
     public String getName() {

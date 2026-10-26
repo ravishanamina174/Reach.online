@@ -579,3 +579,65 @@ cd backend
 ```
 
 The test environment uses an in-memory H2 database. Flyway applies the initial migration during test startup, and Hibernate validates the resulting schema.
+# Reach.Online V2 configuration
+
+## Clerk
+
+The frontend uses `@clerk/nextjs` with Google sign-in configured in Clerk. Set
+`NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` in the frontend environment and keep
+`CLERK_SECRET_KEY` server-side only if it is needed by deployment tooling.
+
+Configure the Clerk session token template to include the public metadata role
+as a top-level claim:
+
+```json
+{
+  "role": "{{user.public_metadata.role}}"
+}
+```
+
+The backend reads `role` and defaults to regular-user permissions when the
+claim is missing or not equal to `admin`. Configure `CLERK_ISSUER_URI` to the
+issuer shown by Clerk so Spring Security validates the JWT signature and
+issuer. Do not copy development keys or issuer URLs into production.
+
+## Profiles and workspaces
+
+Profiles are owned by the verified Clerk subject. The owner can edit, publish,
+or delete their own profile through `/api/profiles/me`. Authenticated users can
+only read profiles that their owners have published through
+`/api/profiles/public`; those responses do not include editing controls.
+
+Personal workspace records use the verified Clerk subject as their owner.
+Demo workspace writes require the administrator role from the verified Clerk
+JWT, while personal workspace writes are limited to the authenticated owner.
+The administrator profile remains separate from the shared demo workspace.
+
+## Local development
+
+Frontend:
+
+```text
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=<Clerk development publishable key>
+```
+
+Backend:
+
+```text
+DATABASE_URL=<Neon JDBC URL>
+DATABASE_USERNAME=<Neon username>
+DATABASE_PASSWORD=<Neon password>
+CLERK_ISSUER_URI=<Clerk development issuer URL>
+APP_CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+```
+
+## Production deployment
+
+Set the production Clerk publishable key and issuer URL separately from
+development. Set `NEXT_PUBLIC_API_BASE_URL` to the deployed Spring Boot API,
+and set `APP_CORS_ALLOWED_ORIGINS` to the exact deployed Vercel origin. Add
+both local and production URLs to the corresponding Clerk instance's allowed
+origins and redirect URLs. Run the V3 Flyway migration against the existing
+database; it preserves existing rows as the shared Demo workspace and assigns
+new authenticated personal rows to the Clerk subject.
