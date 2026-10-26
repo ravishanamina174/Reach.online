@@ -8,6 +8,8 @@ import java.util.UUID;
 public record ReleaseReviewResponse(
         UUID id,
         UUID contractId,
+        String contractName,
+        String baselineVersion,
         String proposedVersion,
         String status,
         JsonNode findings,

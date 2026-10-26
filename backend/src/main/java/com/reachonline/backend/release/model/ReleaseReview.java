@@ -20,6 +20,9 @@ public class ReleaseReview {
     @Column(name = "contract_id")
     private UUID contractId;
 
+    @Column(name = "baseline_version", length = 80)
+    private String baselineVersion;
+
     @Column(name = "proposed_version", nullable = false, length = 80)
     private String proposedVersion;
 
@@ -40,11 +43,13 @@ public class ReleaseReview {
 
     public ReleaseReview(
             UUID contractId,
+            String baselineVersion,
             String proposedVersion,
             String status,
             String findings
     ) {
         this.contractId = contractId;
+        this.baselineVersion = baselineVersion;
         this.proposedVersion = proposedVersion;
         this.status = status;
         this.findings = findings;
@@ -78,6 +83,10 @@ public class ReleaseReview {
 
     public UUID getContractId() {
         return contractId;
+    }
+
+    public String getBaselineVersion() {
+        return baselineVersion;
     }
 
     public String getProposedVersion() {

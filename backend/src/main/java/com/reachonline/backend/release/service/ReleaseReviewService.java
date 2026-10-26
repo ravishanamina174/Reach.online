@@ -20,6 +20,7 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.UUID;
 
@@ -83,6 +84,7 @@ public class ReleaseReviewService {
 
         ReleaseReview review = new ReleaseReview(
                 proposedContract.getId(),
+                request.fromVersion(),
                 request.proposedVersion(),
                 governance.decision(),
                 findingsJson
@@ -121,10 +123,39 @@ public class ReleaseReviewService {
             GovernanceEvaluationResponse governance
     ) {
         try {
+            List<String> recommendations = new ArrayList<>();
+
+            if ("BLOCKED".equals(governance.decision())) {
+                recommendations.add(
+                        "Resolve all blocking governance findings before release."
+                );
+            } else if ("WARNING".equals(governance.decision())) {
+                recommendations.add(
+                        "Review the warning findings and confirm consumer compatibility before release."
+                );
+            } else {
+                recommendations.add(
+                        "No enabled governance policy blocked this release."
+                );
+            }
+
+            if (impact.affectedAgentCount() > 0) {
+                recommendations.add(
+                        "Validate the changed contract paths with every affected agent consumer."
+                );
+            }
+
+            if (!impact.hasChanges()) {
+                recommendations.add(
+                        "The selected versions are equivalent; no contract migration is required."
+                );
+            }
+
             return jsonMapper.writeValueAsString(
                     Map.of(
                             "impact", impact,
-                            "governance", governance
+                            "governance", governance,
+                            "recommendations", recommendations
                     )
             );
         } catch (Exception exception) {
@@ -142,6 +173,12 @@ public class ReleaseReviewService {
             return new ReleaseReviewResponse(
                     review.getId(),
                     review.getContractId(),
+                    review.getContractId() == null
+                            ? null
+                            : contractRepository.findById(review.getContractId())
+                                    .map(Contract::getName)
+                                    .orElse(null),
+                    review.getBaselineVersion(),
                     review.getProposedVersion(),
                     review.getStatus(),
                     findings,

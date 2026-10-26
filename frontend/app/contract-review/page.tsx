@@ -8,6 +8,7 @@ import {
   ChevronRight,
   FileSearch,
   LoaderCircle,
+  Plus,
   RefreshCw,
   ShieldCheck,
   GitBranch,
@@ -99,6 +100,7 @@ type ReleaseReview = {
   id: string | number;
   contractName?: string;
   contractId?: string | number;
+  baselineVersion?: string;
   proposedVersion: string;
   status: string;
   findings?: unknown;
@@ -122,6 +124,22 @@ function prettyValue(value: unknown): string {
   } catch {
     return String(value);
   }
+}
+
+function recommendationsFromFindings(value: unknown): string[] {
+  if (
+    !value ||
+    typeof value !== "object" ||
+    !("recommendations" in value) ||
+    !Array.isArray(value.recommendations)
+  ) {
+    return [];
+  }
+
+  return value.recommendations.filter(
+    (recommendation): recommendation is string =>
+      typeof recommendation === "string",
+  );
 }
 
 function displayDate(value?: string): string {
@@ -267,6 +285,14 @@ export default function ContractReviewPage() {
   const [contractName, setContractName] = useState("");
   const [fromVersion, setFromVersion] = useState("");
   const [toVersion, setToVersion] = useState("");
+  const [newContractName, setNewContractName] = useState("");
+  const [newContractType, setNewContractType] = useState("MCP_TOOL");
+  const [newContractVersion, setNewContractVersion] = useState("");
+  const [newContractContent, setNewContractContent] = useState("{}");
+  const [registrationState, setRegistrationState] =
+    useState<LoadState>("idle");
+  const [registrationError, setRegistrationError] = useState("");
+  const [registrationNotice, setRegistrationNotice] = useState("");
 
   const [initialState, setInitialState] = useState<LoadState>("loading");
   const [versionsState, setVersionsState] = useState<LoadState>("idle");
@@ -413,6 +439,92 @@ useEffect(() => {
   async function handleContractChange(name: string) {
     setContractName(name);
     await loadVersions(name, contracts);
+  }
+
+  async function registerContractVersion(
+    event: React.FormEvent<HTMLFormElement>,
+  ) {
+    event.preventDefault();
+    setRegistrationState("loading");
+    setRegistrationError("");
+    setRegistrationNotice("");
+
+    const name = newContractName.trim();
+    const version = newContractVersion.trim();
+
+    if (!name || !version) {
+      setRegistrationError("Contract name and version are required.");
+      setRegistrationState("error");
+      return;
+    }
+
+    let content: unknown;
+
+    try {
+      content = JSON.parse(newContractContent);
+    } catch {
+      setRegistrationError("Contract definition must contain valid JSON.");
+      setRegistrationState("error");
+      return;
+    }
+
+    if (
+      content === null ||
+      typeof content !== "object" ||
+      Array.isArray(content) ||
+      Object.keys(content).length === 0
+    ) {
+      setRegistrationError(
+        "Contract definition must be a non-empty JSON object.",
+      );
+      setRegistrationState("error");
+      return;
+    }
+
+    const knownDuplicate = contracts.some(
+      (contract) =>
+        contract.name.toLowerCase() === name.toLowerCase() &&
+        contract.version === version,
+    );
+
+    if (knownDuplicate) {
+      setRegistrationError(
+        `Version ${version} already exists for ${name}. Choose a new version.`,
+      );
+      setRegistrationState("error");
+      return;
+    }
+
+    try {
+      const saved = await apiRequest<Contract>("/api/contracts", {
+        method: "POST",
+        body: JSON.stringify({
+          name,
+          contractType: newContractType,
+          version,
+          content,
+        }),
+      });
+
+      const updatedContracts = [
+        saved,
+        ...contracts.filter((contract) => contract.id !== saved.id),
+      ];
+      setContracts(updatedContracts);
+      setInitialError("");
+      setNewContractName("");
+      setNewContractVersion("");
+      setNewContractContent("{}");
+      setRegistrationNotice(
+        `${saved.name} version ${saved.version} was registered successfully.`,
+      );
+      setRegistrationState("success");
+      setContractName(saved.name);
+      await loadVersions(saved.name, updatedContracts);
+    } catch (error) {
+      setRegistrationError(errorMessage(error));
+      setRegistrationState("error");
+    }
   }
 
   async function analyzeChanges() {
@@ -587,6 +699,100 @@ useEffect(() => {
       {initialError && <ErrorNotice message={initialError} />}
 
       <Panel
+        title="Register new contract version"
+        description="Create a contract or add a new version without leaving the release workflow."
+        icon={Plus}
+      >
+        <form onSubmit={registerContractVersion} className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-3">
+            <label className="block space-y-2">
+              <span className="text-xs font-medium text-[var(--muted-foreground)]">
+                Contract name or identifier
+              </span>
+              <input
+                required
+                value={newContractName}
+                onChange={(event) => setNewContractName(event.target.value)}
+                placeholder="course_tool"
+                className="w-full rounded-sm border border-[var(--border)] bg-[var(--background)] px-3 py-2.5 text-sm outline-none focus:border-[var(--focus-ring)]"
+              />
+            </label>
+
+            <label className="block space-y-2">
+              <span className="text-xs font-medium text-[var(--muted-foreground)]">
+                Contract type
+              </span>
+              <select
+                value={newContractType}
+                onChange={(event) => setNewContractType(event.target.value)}
+                className="w-full rounded-sm border border-[var(--border)] bg-[var(--background)] px-3 py-2.5 text-sm outline-none focus:border-[var(--focus-ring)]"
+              >
+                <option value="MCP_TOOL">MCP_TOOL</option>
+                <option value="OPENAPI">OPENAPI</option>
+              </select>
+            </label>
+
+            <label className="block space-y-2">
+              <span className="text-xs font-medium text-[var(--muted-foreground)]">
+                Version
+              </span>
+              <input
+                required
+                value={newContractVersion}
+                onChange={(event) => setNewContractVersion(event.target.value)}
+                placeholder="1.3.0"
+                pattern="[A-Za-z0-9][A-Za-z0-9._+-]*"
+                className="w-full rounded-sm border border-[var(--border)] bg-[var(--background)] px-3 py-2.5 text-sm outline-none focus:border-[var(--focus-ring)]"
+              />
+            </label>
+          </div>
+
+          <label className="block space-y-2">
+            <span className="text-xs font-medium text-[var(--muted-foreground)]">
+              Contract definition (JSON)
+            </span>
+            <textarea
+              required
+              value={newContractContent}
+              onChange={(event) => setNewContractContent(event.target.value)}
+              rows={8}
+              className="w-full rounded-sm border border-[var(--border)] bg-[var(--background)] p-3 font-mono text-xs leading-5 outline-none focus:border-[var(--focus-ring)]"
+            />
+          </label>
+
+          {registrationError && <ErrorNotice message={registrationError} />}
+          {registrationNotice && (
+            <div
+              role="status"
+              className="rounded-sm border border-emerald-500/30 bg-emerald-500/5 p-3 text-sm text-emerald-700 dark:text-emerald-300"
+            >
+              {registrationNotice}
+            </div>
+          )}
+
+          <div className="flex flex-col gap-3 border-t border-[var(--border)] pt-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-xs leading-5 text-[var(--muted)]">
+              Definitions must be non-empty JSON objects. Duplicate versions
+              are rejected by the backend and checked before submission when
+              already loaded.
+            </p>
+            <button
+              type="submit"
+              disabled={registrationState === "loading"}
+              className="inline-flex items-center justify-center gap-2 rounded-sm bg-[var(--accent)] px-4 py-2.5 text-sm font-medium text-[var(--accent-foreground)] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {registrationState === "loading" && (
+                <LoaderCircle className="size-4 animate-spin" />
+              )}
+              {registrationState === "loading"
+                ? "Registering…"
+                : "Register version"}
+            </button>
+          </div>
+        </form>
+      </Panel>
+
+      <Panel
         title="Select contract versions"
         description="Choose a registered contract and compare a baseline with a proposed version."
         icon={GitBranch}
@@ -599,7 +805,7 @@ useEffect(() => {
         ) : contracts.length === 0 ? (
           <EmptyState
             title="No contracts available"
-            description="Register a contract through the backend before starting a review. Then refresh this page."
+            description="Register the first contract version using the form above to start a review."
           />
         ) : (
           <div className="space-y-5">
@@ -996,11 +1202,29 @@ useEffect(() => {
                   <div className="mt-3 flex flex-wrap items-center gap-2">
                     <StatusPill value={selectedReview.status} />
                     <span className="text-xs text-[var(--muted)]">
-                      Proposed version: {selectedReview.proposedVersion}
+                      {selectedReview.contractName && (
+                        <>Contract: {selectedReview.contractName} · </>
+                      )}
+                      Baseline: {selectedReview.baselineVersion ?? "—"} ·
+                      Proposed: {selectedReview.proposedVersion}
                     </span>
                   </div>
                 </div>
               </div>
+              {recommendationsFromFindings(selectedReview.findings).length > 0 && (
+                <div className="mt-4 rounded-sm border border-[var(--border)] bg-[var(--surface-secondary)] p-4">
+                  <p className="text-xs font-medium text-[var(--muted)]">
+                    Recommendations
+                  </p>
+                  <ul className="mt-2 list-disc space-y-1 pl-5 text-sm leading-6">
+                    {recommendationsFromFindings(selectedReview.findings).map(
+                      (recommendation) => (
+                        <li key={recommendation}>{recommendation}</li>
+                      ),
+                    )}
+                  </ul>
+                </div>
+              )}
               {selectedReview.findings !== undefined && (
                 <details className="mt-4">
                   <summary className="cursor-pointer text-xs font-medium">
@@ -1058,7 +1282,10 @@ useEffect(() => {
                       </span>
                     </td>
                     <td className="px-3 py-3">
-                      {review.proposedVersion}
+                      {review.baselineVersion
+                        ? `v${review.baselineVersion} → `
+                        : ""}
+                      v{review.proposedVersion}
                     </td>
                     <td className="px-3 py-3">
                       <StatusPill value={review.status} />

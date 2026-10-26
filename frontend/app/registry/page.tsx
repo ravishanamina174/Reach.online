@@ -300,6 +300,11 @@ export default function RegistryPage() {
   const [dependencyTool, setDependencyTool] = useState("");
   const [expectations, setExpectations] = useState("{}");
 
+  const [contractName, setContractName] = useState("");
+  const [contractType, setContractType] = useState("MCP_TOOL");
+  const [contractVersion, setContractVersion] = useState("");
+  const [contractContent, setContractContent] = useState("{}");
+
   const [policyName, setPolicyName] = useState("");
   const [policyDescription, setPolicyDescription] = useState("");
   const [policyRule, setPolicyRule] = useState("WARN_ON_ANY_CHANGE");
@@ -465,6 +470,77 @@ export default function RegistryPage() {
 
       setExpectations("{}");
     }, "Dependency registered successfully.");
+  }
+
+  async function createContract(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    let parsedContent: unknown;
+
+    try {
+      parsedContent = JSON.parse(contractContent);
+    } catch {
+      setError("Contract content must contain valid JSON.");
+      return;
+    }
+
+    if (
+      parsedContent === null ||
+      typeof parsedContent !== "object" ||
+      Array.isArray(parsedContent) ||
+      Object.keys(parsedContent).length === 0
+    ) {
+      setError("Contract content must be a non-empty JSON object.");
+      return;
+    }
+
+    await submitAction(async () => {
+      await apiRequest("/api/contracts", {
+        method: "POST",
+        body: JSON.stringify({
+          name: contractName.trim(),
+          contractType,
+          version: contractVersion.trim(),
+          content: parsedContent,
+        }),
+      });
+
+      setContractName("");
+      setContractVersion("");
+      setContractContent("{}");
+    }, "Contract version registered successfully.");
+  }
+
+  async function loadContractFile(
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+
+    if (!file) return;
+
+    try {
+      const content = await file.text();
+      const parsed = JSON.parse(content);
+
+      if (
+        parsed === null ||
+        typeof parsed !== "object" ||
+        Array.isArray(parsed) ||
+        Object.keys(parsed).length === 0
+      ) {
+        throw new Error("The uploaded file must contain a non-empty JSON object.");
+      }
+
+      setContractContent(JSON.stringify(parsed, null, 2));
+      setError("");
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "The contract file could not be read as JSON.",
+      );
+    }
   }
 
   async function createPolicy(event: React.FormEvent<HTMLFormElement>) {
@@ -767,7 +843,12 @@ export default function RegistryPage() {
 
               {activeTab === "contracts" && (
                 <>
-                  <h2 className="text-lg font-semibold">Registered contracts</h2>
+                  <div>
+                    <h2 className="text-lg font-semibold">Registered contracts</h2>
+                    <p className="mt-1 text-xs leading-5 text-[var(--muted)]">
+                      Register the first version or add a new version to an existing contract name.
+                    </p>
+                  </div>
                   {!available.contracts ? (
                     <EmptyMessage
                       title="Contracts are unavailable"
@@ -787,9 +868,38 @@ export default function RegistryPage() {
                       ))}
                     </DataTable>
                   )}
-                  <p className="text-xs leading-5 text-[var(--muted)]">
-                    Contract creation and version comparison remain available through Contract Review and the existing contract API. This registry tab is read-only in this step.
-                  </p>
+
+                  <form onSubmit={createContract} className="space-y-4 rounded-sm border border-[var(--border)] p-4">
+                    <h3 className="flex items-center gap-2 text-sm font-semibold">
+                      <Plus className="size-4" />
+                      Register contract version
+                    </h3>
+                    <div className="grid gap-3 md:grid-cols-3">
+                      <Field label="Contract name" value={contractName} onChange={setContractName} placeholder="get_timetable" required />
+                      <label className="block space-y-1.5">
+                        <span className="text-xs font-medium text-[var(--muted-foreground)]">Contract type</span>
+                        <select value={contractType} onChange={(event) => setContractType(event.target.value)} className="w-full rounded-sm border border-[var(--border)] bg-[var(--background)] px-3 py-2.5 text-sm">
+                          <option value="MCP_TOOL">MCP_TOOL</option>
+                          <option value="OPENAPI">OPENAPI</option>
+                        </select>
+                      </label>
+                      <Field label="Version" value={contractVersion} onChange={setContractVersion} placeholder="1.3.0" required />
+                    </div>
+                    <label className="block space-y-1.5">
+                      <span className="text-xs font-medium text-[var(--muted-foreground)]">Contract definition (JSON)</span>
+                      <textarea value={contractContent} onChange={(event) => setContractContent(event.target.value)} rows={8} required className="w-full rounded-sm border border-[var(--border)] bg-[var(--background)] p-3 font-mono text-xs outline-none focus:border-[var(--focus-ring)]" />
+                    </label>
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <label className="inline-flex cursor-pointer items-center gap-2 text-xs text-[var(--muted-foreground)]">
+                        <span className="rounded-sm border border-[var(--border)] px-3 py-2 hover:bg-[var(--surface-hover)]">Upload JSON</span>
+                        <input type="file" accept=".json,application/json" onChange={(event) => void loadContractFile(event)} className="sr-only" />
+                        <span>Replace the definition from a JSON file</span>
+                      </label>
+                      <button disabled={busy} className="rounded-sm bg-[var(--accent)] px-4 py-2.5 text-sm font-medium text-[var(--accent-foreground)] disabled:opacity-50">
+                        {busy ? "Saving…" : "Register version"}
+                      </button>
+                    </div>
+                  </form>
                 </>
               )}
 
