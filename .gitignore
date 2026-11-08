@@ -4,6 +4,7 @@
 !.env.example
 !.env.*.example
 backend/.env.example
+/backend/.env
 
 # Node.js and Next.js
 node_modules/

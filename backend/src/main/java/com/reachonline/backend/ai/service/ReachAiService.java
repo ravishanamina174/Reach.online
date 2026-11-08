@@ -1,90 +1,57 @@
 package com.reachonline.backend.ai.service;
 
-import com.reachonline.backend.ai.agent.AgentDefinition;
-import com.reachonline.backend.ai.agent.AgentRegistry;
-import com.reachonline.backend.ai.agent.AgentType;
+import com.reachonline.backend.contracts.ContractDiffService;
+import com.reachonline.backend.contracts.ContractImpactService;
+import com.reachonline.backend.governance.service.GovernanceEvaluationService;
 
 import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.service.AiServices;
 
 import org.springframework.stereotype.Service;
+
+import tools.jackson.databind.json.JsonMapper;
 
 @Service
 public class ReachAiService {
 
     private final ChatModel chatModel;
-    private final AgentRegistry agentRegistry;
+
+    private final ContractDiffService contractDiffService;
+    private final ContractImpactService contractImpactService;
+    private final GovernanceEvaluationService governanceEvaluationService;
+
+    private final JsonMapper jsonMapper;
 
     public ReachAiService(
             ChatModel chatModel,
-            AgentRegistry agentRegistry
+            ContractDiffService contractDiffService,
+            ContractImpactService contractImpactService,
+            GovernanceEvaluationService governanceEvaluationService,
+            JsonMapper jsonMapper
     ) {
         this.chatModel = chatModel;
-        this.agentRegistry = agentRegistry;
+        this.contractDiffService = contractDiffService;
+        this.contractImpactService = contractImpactService;
+        this.governanceEvaluationService = governanceEvaluationService;
+        this.jsonMapper = jsonMapper;
     }
 
-    public String chat(String message) {
+    public String chat(String message, String ownerUserId) {
 
-        AgentDefinition agent = agentRegistry
-                .getAgent(AgentType.ORCHESTRATOR)
-                .orElseThrow();
-
-        String prompt = """
-                %s
-
-                User message:
-                %s
-
-                Identify the most suitable specialist agent.
-
-                Return only one of these exact values:
-                CONTRACT_ANALYSIS
-                DEPENDENCY_IMPACT
-                GOVERNANCE
-                GENERAL
-                """.formatted(
-                agent.systemPrompt(),
-                message
+        ReachPlatformTools platformTools = new ReachPlatformTools(
+                contractDiffService,
+                contractImpactService,
+                governanceEvaluationService,
+                jsonMapper,
+                ownerUserId
         );
 
-        String selectedAgent = chatModel.chat(prompt).trim();
+        ReachAiAssistant assistant = AiServices
+                .builder(ReachAiAssistant.class)
+                .chatModel(chatModel)
+                .tools(platformTools)
+                .build();
 
-        AgentType agentType = resolveAgent(selectedAgent);
-
-        AgentDefinition selectedDefinition = agentRegistry
-                .getAgent(agentType)
-                .orElseThrow();
-
-        String specialistPrompt = """
-                %s
-
-                User question:
-                %s
-
-                Answer the user clearly and accurately.
-                Do not invent platform data.
-                """.formatted(
-                selectedDefinition.systemPrompt(),
-                message
-        );
-
-        return chatModel.chat(specialistPrompt);
-    }
-
-    private AgentType resolveAgent(String selectedAgent) {
-
-        return switch (selectedAgent.toUpperCase()) {
-
-            case "CONTRACT_ANALYSIS" ->
-                    AgentType.CONTRACT_ANALYSIS;
-
-            case "DEPENDENCY_IMPACT" ->
-                    AgentType.DEPENDENCY_IMPACT;
-
-            case "GOVERNANCE" ->
-                    AgentType.GOVERNANCE;
-
-            default ->
-                    AgentType.ORCHESTRATOR;
-        };
+        return assistant.chat(message);
     }
 }

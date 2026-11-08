@@ -1,7 +1,12 @@
 package com.reachonline.backend.ai.controller;
 
 import com.reachonline.backend.ai.service.ReachAiService;
+import com.reachonline.backend.security.WorkspaceContext;
+import com.reachonline.backend.security.WorkspaceRequest;
+
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
@@ -18,10 +23,22 @@ public class AiChatController {
 
     @PostMapping("/chat")
     public ChatResponse chat(
-            @Valid @RequestBody ChatRequest request
+            @Valid @RequestBody ChatRequest request,
+            HttpServletRequest httpRequest
     ) {
-        String reply = reachAiService.chat(request.message());
 
-        return new ChatResponse(reply, Instant.now());
+        String ownerUserId = WorkspaceContext.ownerFor(
+                WorkspaceRequest.from(httpRequest)
+        );
+
+        String reply = reachAiService.chat(
+                request.message(),
+                ownerUserId
+        );
+
+        return new ChatResponse(
+                reply,
+                Instant.now()
+        );
     }
 }
