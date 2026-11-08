@@ -592,10 +592,10 @@ export default function RegistryPage() {
     <div className="mx-auto max-w-[1200px] space-y-7">
       <header className="flex flex-col justify-between gap-4 border-b border-[var(--border)] pb-6 sm:flex-row sm:items-end">
         <div className="space-y-3">
-          <div className="inline-flex items-center gap-2 rounded-sm border border-[var(--border)] px-2.5 py-1 text-xs text-[var(--muted-foreground)]">
+          {/* <div className="inline-flex items-center gap-2 rounded-sm border border-[var(--border)] px-2.5 py-1 text-xs text-[var(--muted-foreground)]">
             <Boxes className="size-3.5" />
             Platform registry
-          </div>
+          </div> */}
           <h1 className="text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">
             Agent & tool registry
           </h1>
@@ -699,9 +699,9 @@ export default function RegistryPage() {
                 <>
                   <div>
                     <h2 className="text-lg font-semibold">Registered agents</h2>
-                    <p className="mt-1 text-xs text-[var(--muted)]">
+                    {/* <p className="mt-1 text-xs text-[var(--muted)]">
                       Agent names must match the identifiers used by dependency records.
-                    </p>
+                    </p> */}
                   </div>
 
                   {!available.agents ? (

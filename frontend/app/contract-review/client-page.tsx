@@ -668,10 +668,10 @@ useEffect(() => {
     <div className="mx-auto max-w-[1200px] space-y-7">
       <header className="flex flex-col justify-between gap-4 border-b border-[var(--border)] pb-6 sm:flex-row sm:items-end">
         <div className="space-y-3">
-          <div className="inline-flex items-center gap-2 rounded-sm border border-[var(--border)] px-2.5 py-1 text-xs text-[var(--muted-foreground)]">
+          {/* <div className="inline-flex items-center gap-2 rounded-sm border border-[var(--border)] px-2.5 py-1 text-xs text-[var(--muted-foreground)]">
             <FileSearch className="size-3.5" />
             Release workflow
-          </div>
+          </div> */}
 
           <h1 className="text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">
             Contract review
@@ -771,11 +771,11 @@ useEffect(() => {
           )}
 
           <div className="flex flex-col gap-3 border-t border-[var(--border)] pt-4 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-xs leading-5 text-[var(--muted)]">
+            {/* <p className="text-xs leading-5 text-[var(--muted)]">
               Definitions must be non-empty JSON objects. Duplicate versions
               are rejected by the backend and checked before submission when
               already loaded.
-            </p>
+            </p> */}
             <button
               type="submit"
               disabled={registrationState === "loading"}
@@ -891,9 +891,9 @@ useEffect(() => {
             )}
 
             <div className="flex flex-col gap-3 border-t border-[var(--border)] pt-4 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-xs leading-5 text-[var(--muted)]">
+              {/* <p className="text-xs leading-5 text-[var(--muted)]">
                 Comparison and impact results come from the backend.
-              </p>
+              </p> */}
 
               <button
                 type="button"
@@ -1242,7 +1242,7 @@ useEffect(() => {
 
       <Panel
         title="Saved release reviews"
-        description="Review records retrieved from the backend."
+        description="Review records retrieved"
         icon={FileCheck2}
         action={
           <span className="rounded-sm border border-[var(--border)] px-2.5 py-1 text-xs text-[var(--muted)]">
@@ -1312,13 +1312,13 @@ useEffect(() => {
         {reviewError && <div className="mt-4"><ErrorNotice message={reviewError} /></div>}
       </Panel>
 
-      {policies.length > 0 && (
+      {/* {policies.length > 0 && (
         <p className="text-xs text-[var(--muted)]">
           {policies.filter((policy) => policy.enabled !== false).length} enabled
           policies found in the registry. The governance decision shown above
           comes from the backend evaluator.
         </p>
-      )}
+      )} */}
     </div>
   );
 }

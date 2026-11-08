@@ -353,10 +353,6 @@ export function AppShell({ children }: AppShellProps) {
           </div>
 
           <div className="flex shrink-0 items-center gap-3">
-            <div className="hidden items-center gap-2 text-xs text-[var(--muted)] md:flex">
-              <span className="size-1.5 rounded-full bg-[var(--muted)]" />
-              Development
-            </div>
             <ThemeToggle />
           </div>
         </header>
@@ -366,7 +362,7 @@ export function AppShell({ children }: AppShellProps) {
 
           <footer className="mt-12 flex flex-col gap-2 border-t border-[var(--border)] py-5 text-xs text-[var(--muted)] sm:flex-row sm:items-center sm:justify-between">
             <span>Reach.Online · AI Agent API Governance</span>
-            <span>Development workspace</span>
+            <span>Your Agents workspace</span>
           </footer>
         </main>
       </div>

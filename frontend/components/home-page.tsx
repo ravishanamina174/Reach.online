@@ -325,9 +325,9 @@ const cards = [
           <h2 className="mt-1 text-base font-semibold">
             Platform overview
           </h2>
-          <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+          {/* <p className="mt-1 text-sm text-[var(--muted-foreground)]">
             Counts are based on the records returned by your backend APIs.
-          </p>
+          </p> */}
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
@@ -346,12 +346,12 @@ const cards = [
         <div className="rounded-sm border border-[var(--border)] bg-[var(--surface)]">
           <div className="flex items-center justify-between gap-3 border-b border-[var(--border)] p-4">
             <div>
-              <h2 className="text-sm font-semibold">
+              <h2 className="text-md font-semibold">
                 Recent release reviews
               </h2>
-              <p className="mt-1 text-xs text-[var(--muted)]">
-                Latest records returned by the backend.
-              </p>
+              {/* <p className="mt-1 text-xs text-[var(--muted)]">
+                Latest records returned.
+              </p> */}
             </div>
             <FileCheck2 className="size-4 text-[var(--muted)]" />
           </div>
@@ -420,10 +420,10 @@ const cards = [
 
         <div className="rounded-sm border border-[var(--border)] bg-[var(--surface)]">
           <div className="border-b border-[var(--border)] p-4">
-            <h2 className="text-sm font-semibold">Quick actions</h2>
-            <p className="mt-1 text-xs text-[var(--muted)]">
+            <h2 className="text-md font-semibold">Quick actions</h2>
+            {/* <p className="mt-1 text-xs text-[var(--muted)]">
               Go directly to a workspace.
-            </p>
+            </p> */}
           </div>
 
           <div className="space-y-2 p-3">
