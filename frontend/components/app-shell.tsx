@@ -11,6 +11,7 @@ import {
   LayoutDashboard,
   Menu,
   ShieldCheck,
+  Sparkles,
   X,
 } from "lucide-react";
 import { useEffect, useState, useSyncExternalStore } from "react";
@@ -45,6 +46,12 @@ const primaryNavigation = [
     href: "/contract-review",
     icon: FileSearch,
     status: "available",
+  },
+  {
+  label: "Reach AI",
+  href: "/ai",
+  icon: Sparkles,
+  status: "available",
   },
   {
     label: "Agent & tool registry",

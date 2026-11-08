@@ -79,13 +79,14 @@ async function readError(response: Response): Promise<ApiError> {
 export async function apiRequest<T>(
   path: string,
   init: RequestInit = {},
+  timeoutMs = REQUEST_TIMEOUT_MS,
 ): Promise<T> {
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
   const controller = new AbortController();
   const timeout = window.setTimeout(
-    () => controller.abort(),
-    REQUEST_TIMEOUT_MS,
-  );
+  () => controller.abort(),
+  timeoutMs,
+);
   const externalAbort = () => controller.abort();
 
   if (init.signal) {
@@ -176,4 +177,28 @@ export async function checkBackendHealth(): Promise<BackendHealth> {
 
 export function getApiBaseUrl(): string {
   return API_BASE_URL;
+}
+
+export type AiChatRequest = {
+  message: string;
+};
+
+export type AiChatResponse = {
+  reply: string;
+  timestamp: string;
+};
+
+export async function sendAiMessage(
+  message: string,
+  signal?: AbortSignal,
+): Promise<AiChatResponse> {
+  return apiRequest<AiChatResponse>(
+    "/api/ai/chat",
+    {
+      method: "POST",
+      body: JSON.stringify({ message }),
+      signal,
+    },
+    90_000,
+  );
 }

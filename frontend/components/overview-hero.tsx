@@ -3,10 +3,10 @@
 
 import Image from "next/image";
 import {
-  Activity,
-  AlertCircle,
-  CheckCircle2,
-  LoaderCircle,
+  // Activity,
+  // AlertCircle,
+  // CheckCircle2,
+  // LoaderCircle,
   RefreshCw,
   ShieldCheck,
   Workflow,
@@ -22,7 +22,7 @@ type OverviewHeroProps = {
 };
 
 export default function OverviewHero({
-  connection,
+  // connection,
   loading,
   onRefresh,
 }: OverviewHeroProps) {
