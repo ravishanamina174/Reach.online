@@ -70,6 +70,14 @@
             <artifactId>h2</artifactId>
             <scope>test</scope>
         </dependency>
+
+	<!-- LangChain4j: OpenAI integration for Spring Boot 4 -->
+		<dependency>
+			<groupId>dev.langchain4j</groupId>
+			<artifactId>langchain4j-open-ai-spring-boot4-starter</artifactId>
+			<version>1.23.0-beta33</version>
+		</dependency>
+
 <!-- Spring Boot 4 Flyway integration -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
