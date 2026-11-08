@@ -1,42 +1,90 @@
 package com.reachonline.backend.ai.service;
 
+import com.reachonline.backend.ai.agent.AgentDefinition;
+import com.reachonline.backend.ai.agent.AgentRegistry;
+import com.reachonline.backend.ai.agent.AgentType;
+
 import dev.langchain4j.model.chat.ChatModel;
+
 import org.springframework.stereotype.Service;
 
 @Service
 public class ReachAiService {
 
     private final ChatModel chatModel;
+    private final AgentRegistry agentRegistry;
 
-    private static final String SYSTEM_PROMPT = """
-            You are Reach AI, the AI assistant of Reach.Online.
-
-            Reach.Online is an AI Agent API Governance Platform.
-
-            Your responsibilities:
-            - Explain API and MCP contracts.
-            - Explain AI agent and tool dependencies.
-            - Help users understand contract changes.
-            - Explain governance concepts and policies.
-            - Provide clear software engineering guidance.
-
-            Rules:
-            - Give accurate, concise and understandable answers.
-            - Do not invent platform data or analysis results.
-            - Do not claim to have accessed platform records unless
-              they have actually been provided to you.
-            - Do not claim to execute actions or modify records.
-            - Clearly distinguish general explanations from
-              verified platform analysis.
-            """;
-
-    public ReachAiService(ChatModel chatModel) {
+    public ReachAiService(
+            ChatModel chatModel,
+            AgentRegistry agentRegistry
+    ) {
         this.chatModel = chatModel;
+        this.agentRegistry = agentRegistry;
     }
 
     public String chat(String message) {
-        return chatModel.chat(
-                SYSTEM_PROMPT + "\n\nUser message:\n" + message
+
+        AgentDefinition agent = agentRegistry
+                .getAgent(AgentType.ORCHESTRATOR)
+                .orElseThrow();
+
+        String prompt = """
+                %s
+
+                User message:
+                %s
+
+                Identify the most suitable specialist agent.
+
+                Return only one of these exact values:
+                CONTRACT_ANALYSIS
+                DEPENDENCY_IMPACT
+                GOVERNANCE
+                GENERAL
+                """.formatted(
+                agent.systemPrompt(),
+                message
         );
+
+        String selectedAgent = chatModel.chat(prompt).trim();
+
+        AgentType agentType = resolveAgent(selectedAgent);
+
+        AgentDefinition selectedDefinition = agentRegistry
+                .getAgent(agentType)
+                .orElseThrow();
+
+        String specialistPrompt = """
+                %s
+
+                User question:
+                %s
+
+                Answer the user clearly and accurately.
+                Do not invent platform data.
+                """.formatted(
+                selectedDefinition.systemPrompt(),
+                message
+        );
+
+        return chatModel.chat(specialistPrompt);
+    }
+
+    private AgentType resolveAgent(String selectedAgent) {
+
+        return switch (selectedAgent.toUpperCase()) {
+
+            case "CONTRACT_ANALYSIS" ->
+                    AgentType.CONTRACT_ANALYSIS;
+
+            case "DEPENDENCY_IMPACT" ->
+                    AgentType.DEPENDENCY_IMPACT;
+
+            case "GOVERNANCE" ->
+                    AgentType.GOVERNANCE;
+
+            default ->
+                    AgentType.ORCHESTRATOR;
+        };
     }
 }
