@@ -202,3 +202,81 @@ export async function sendAiMessage(
     90_000,
   );
 }
+
+
+export type AiConversation = {
+  id: string;
+  title: string;
+  workspace: "DEMO" | "PERSONAL";
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type AiChatMessage = {
+  id: string;
+  role: "USER" | "ASSISTANT";
+  content: string;
+  createdAt: string;
+};
+
+export type AiSendMessageResponse = {
+  conversationId: string;
+  messages: AiChatMessage[];
+};
+
+export async function getAiConversations(): Promise<AiConversation[]> {
+  return apiRequest<AiConversation[]>("/api/ai/conversations");
+}
+
+export async function createAiConversation(): Promise<AiConversation> {
+  return apiRequest<AiConversation>("/api/ai/conversations", {
+    method: "POST",
+  });
+}
+
+export async function getAiConversationMessages(
+  conversationId: string,
+): Promise<AiChatMessage[]> {
+  return apiRequest<AiChatMessage[]>(
+    `/api/ai/conversations/${conversationId}/messages`,
+  );
+}
+
+export async function sendAiConversationMessage(
+  conversationId: string,
+  message: string,
+  signal?: AbortSignal,
+): Promise<AiSendMessageResponse> {
+  return apiRequest<AiSendMessageResponse>(
+    `/api/ai/conversations/${conversationId}/messages`,
+    {
+      method: "POST",
+      body: JSON.stringify({ message }),
+      signal,
+    },
+  );
+}
+
+export async function renameAiConversation(
+  conversationId: string,
+  title: string,
+): Promise<AiConversation> {
+  return apiRequest<AiConversation>(
+    `/api/ai/conversations/${conversationId}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ title }),
+    },
+  );
+}
+
+export async function deleteAiConversation(
+  conversationId: string,
+): Promise<void> {
+  return apiRequest<void>(
+    `/api/ai/conversations/${conversationId}`,
+    {
+      method: "DELETE",
+    },
+  );
+}
