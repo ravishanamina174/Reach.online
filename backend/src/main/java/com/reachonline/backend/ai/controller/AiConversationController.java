@@ -7,6 +7,8 @@ import com.reachonline.backend.ai.conversation.model.AiMessage;
 import com.reachonline.backend.ai.conversation.service.AiConversationService;
 import com.reachonline.backend.ai.conversation.service.ConversationTurn;
 import com.reachonline.backend.ai.service.ReachAiService;
+import com.reachonline.backend.ai.protection.AiGenerationResult;
+import com.reachonline.backend.ai.protection.ClientIpResolver;
 import com.reachonline.backend.security.WorkspaceContext;
 import com.reachonline.backend.security.WorkspaceRequest;
 
@@ -25,13 +27,16 @@ public class AiConversationController {
 
     private final AiConversationService conversationService;
     private final ReachAiService reachAiService;
+        private final ClientIpResolver clientIpResolver;
 
     public AiConversationController(
             AiConversationService conversationService,
-            ReachAiService reachAiService
+            ReachAiService reachAiService,
+            ClientIpResolver clientIpResolver
     ) {
         this.conversationService = conversationService;
         this.reachAiService = reachAiService;
+        this.clientIpResolver = clientIpResolver;
     }
 
     @PostMapping
@@ -99,7 +104,13 @@ public class AiConversationController {
 
         String prompt = buildPrompt(history, request.message());
 
-        String reply = reachAiService.chat(prompt, contractOwnerId);
+        AiGenerationResult result = reachAiService.chat(
+                prompt,
+                contractOwnerId,
+                owner,
+                clientIpResolver.resolve(httpRequest)
+        );
+        String reply = result.text();
 
         if (reply == null || reply.isBlank()) {
                 throw new IllegalStateException(

@@ -1,6 +1,8 @@
 package com.reachonline.backend.ai.controller;
 
 import com.reachonline.backend.ai.service.ReachAiService;
+import com.reachonline.backend.ai.protection.AiGenerationResult;
+import com.reachonline.backend.ai.protection.ClientIpResolver;
 import com.reachonline.backend.security.WorkspaceContext;
 import com.reachonline.backend.security.WorkspaceRequest;
 
@@ -16,9 +18,14 @@ import java.time.Instant;
 public class AiChatController {
 
     private final ReachAiService reachAiService;
+        private final ClientIpResolver clientIpResolver;
 
-    public AiChatController(ReachAiService reachAiService) {
+        public AiChatController(
+                        ReachAiService reachAiService,
+                        ClientIpResolver clientIpResolver
+        ) {
         this.reachAiService = reachAiService;
+                this.clientIpResolver = clientIpResolver;
     }
 
     @PostMapping("/chat")
@@ -27,17 +34,20 @@ public class AiChatController {
             HttpServletRequest httpRequest
     ) {
 
+        String authenticatedUserId = WorkspaceContext.userIdOrThrow();
         String ownerUserId = WorkspaceContext.ownerFor(
                 WorkspaceRequest.from(httpRequest)
         );
 
-        String reply = reachAiService.chat(
+        AiGenerationResult result = reachAiService.chat(
                 request.message(),
-                ownerUserId
+                ownerUserId,
+                authenticatedUserId,
+                clientIpResolver.resolve(httpRequest)
         );
 
         return new ChatResponse(
-                reply,
+                result.text(),
                 Instant.now()
         );
     }

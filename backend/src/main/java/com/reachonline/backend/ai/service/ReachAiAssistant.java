@@ -2,6 +2,7 @@ package com.reachonline.backend.ai.service;
 
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
+import dev.langchain4j.model.chat.response.ChatResponse;
 
 public interface ReachAiAssistant {
 
@@ -54,5 +55,5 @@ public interface ReachAiAssistant {
             - Use headings or bullet points when useful.
             - If platform data is unavailable, say so honestly.
             """)
-    String chat(@UserMessage String message);
+    ChatResponse chat(@UserMessage String message);
 }
