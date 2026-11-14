@@ -69,6 +69,38 @@ function displayDate(value?: string) {
   return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
 }
 
+function DashboardLoadingBar({
+  connection,
+}: {
+  connection: ConnectionState;
+}) {
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className="fixed inset-x-4 bottom-4 z-50 mx-auto max-w-xl overflow-hidden rounded-sm border border-[var(--border)] bg-[var(--surface)] shadow-lg shadow-black/10 dark:shadow-black/30 sm:inset-x-auto sm:w-[min(100%-2rem,34rem)]"
+    >
+      <div className="h-0.5 w-full overflow-hidden bg-[var(--surface-secondary)]">
+        <div className="h-full w-1/3 animate-[reach-loading_1.8s_ease-in-out_infinite] bg-[#F07870]" />
+      </div>
+      <div className="flex items-center gap-3 px-4 py-3">
+        <LoaderCircle
+          aria-hidden="true"
+          className="size-4 shrink-0 animate-spin text-[#d95f68]"
+        />
+        <div className="min-w-0">
+          <p className="text-sm font-medium">Preparing your workspace</p>
+          <p className="truncate text-xs text-[var(--muted-foreground)]">
+            {connection.status === "checking"
+              ? connection.message
+              : "Backend connected. Loading your latest data…"}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 
 function StatCard({
   label,
@@ -303,31 +335,10 @@ const cards = [
         }
       : connection;
 
-  if (loading && !data) {
-    return (
-      <main className="flex min-h-[calc(100vh-160px)] items-center justify-center">
-        <section
-          aria-live="polite"
-          className="w-full max-w-md rounded-sm border border-[var(--border)] bg-[var(--surface)] p-8 text-center shadow-sm"
-        >
-          <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-[var(--surface-secondary)]">
-            <LoaderCircle className="size-6 animate-spin text-[var(--muted-foreground)]" />
-          </div>
-          <h1 className="mt-5 text-lg font-semibold">
-            Connecting to Reach.online…
-          </h1>
-          <p className="mt-2 text-sm leading-6 text-[var(--muted-foreground)]">
-            {connection.status === "checking"
-              ? connection.message
-              : "Backend connected. Loading your workspace…"}
-          </p>
-        </section>
-      </main>
-    );
-  }
-
   return (
-    <div className="mx-auto max-w-[1200px] space-y-8">
+    <div className="mx-auto max-w-[1200px] space-y-8 pb-20">
+      {loading && <DashboardLoadingBar connection={connection} />}
+
       {/* Overview hero: heading, refresh and backend status appear once */}
 <OverviewHero
   connection={heroConnection}
