@@ -2,6 +2,9 @@ const API_BASE_URL = (
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080"
 ).replace(/\/+$/, "");
 const REQUEST_TIMEOUT_MS = 15_000;
+const HEALTH_CHECK_TIMEOUT_MS = 10_000;
+const BACKEND_STARTUP_TIMEOUT_MS = 90_000;
+const HEALTH_CHECK_DELAYS_MS = [2_000, 4_000, 8_000, 15_000, 20_000];
 let tokenProvider: (() => Promise<string | null>) | null = null;
 let selectedWorkspace: "demo" | "personal" = "demo";
 
@@ -171,8 +174,73 @@ export function unwrapApiResponse<T>(
   return response.data;
 }
 
-export async function checkBackendHealth(): Promise<BackendHealth> {
-  return apiRequest<BackendHealth>("/api/health");
+export async function checkBackendHealth(
+  signal?: AbortSignal,
+  timeoutMs = HEALTH_CHECK_TIMEOUT_MS,
+): Promise<BackendHealth> {
+  return apiRequest<BackendHealth>(
+    "/api/health",
+    { signal },
+    timeoutMs,
+  );
+}
+
+export async function waitForBackendHealth(
+  signal?: AbortSignal,
+): Promise<BackendHealth> {
+  const startedAt = Date.now();
+  let attempt = 0;
+  let lastError: unknown;
+
+  while (Date.now() - startedAt < BACKEND_STARTUP_TIMEOUT_MS) {
+    try {
+      const remaining = BACKEND_STARTUP_TIMEOUT_MS - (Date.now() - startedAt);
+      return await checkBackendHealth(
+        signal,
+        Math.min(HEALTH_CHECK_TIMEOUT_MS, remaining),
+      );
+    } catch (error) {
+      lastError = error;
+      const delay =
+        HEALTH_CHECK_DELAYS_MS[
+          Math.min(attempt, HEALTH_CHECK_DELAYS_MS.length - 1)
+        ];
+      const remaining = BACKEND_STARTUP_TIMEOUT_MS - (Date.now() - startedAt);
+
+      if (remaining <= 0) break;
+
+      await new Promise<void>((resolve, reject) => {
+        let timeout = 0;
+        const cleanup = () => {
+          window.clearTimeout(timeout);
+          signal?.removeEventListener("abort", abort);
+        };
+        const resolveDelay = () => {
+          cleanup();
+          resolve();
+        };
+        const abort = () => {
+          cleanup();
+          reject(new ApiError("The request was cancelled.", 0));
+        };
+
+        if (signal?.aborted) {
+          abort();
+          return;
+        }
+
+        timeout = window.setTimeout(resolveDelay, Math.min(delay, remaining));
+        signal?.addEventListener("abort", abort, { once: true });
+      });
+      attempt += 1;
+    }
+  }
+
+  if (lastError instanceof ApiError) {
+    throw lastError;
+  }
+
+  throw new ApiError("Reach.Online could not connect to the backend.", 0);
 }
 
 export function getApiBaseUrl(): string {

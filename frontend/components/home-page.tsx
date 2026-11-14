@@ -21,14 +21,13 @@ import { useCallback, useEffect, useState } from "react";
 import OverviewHero from "@/components/overview-hero";
 import {
   apiRequest,
-  ApiError,
-  checkBackendHealth,
+  waitForBackendHealth,
   type ApiResponse,
   type BackendHealth,
 } from "@/lib/api";
 
 type ConnectionState =
-  | { status: "checking" }
+  | { status: "checking"; message: string }
   | { status: "connected"; health: BackendHealth }
   | { status: "disconnected"; message: string };
 
@@ -108,6 +107,8 @@ function StatCard({
 export default function Home() {
   const [connection, setConnection] = useState<ConnectionState>({
     status: "checking",
+    message:
+      "Our backend is waking up. This may take up to a minute. Please wait.",
   });
 
   const [data, setData] = useState<DashboardData | null>(null);
@@ -118,8 +119,28 @@ export default function Home() {
     setLoading(true);
     setError("");
 
+    setConnection({
+      status: "checking",
+      message:
+        "Our backend is waking up. This may take up to a minute. Please wait.",
+    });
+
+    let health: BackendHealth;
+    try {
+      health = await waitForBackendHealth();
+    } catch {
+      setConnection({
+        status: "disconnected",
+        message:
+          "We could not connect to Reach.online right now. Please try again.",
+      });
+      setLoading(false);
+      return;
+    }
+
+    setConnection({ status: "connected", health });
+
     const results = await Promise.allSettled([
-      checkBackendHealth(),
       apiRequest<ApiResponse<Agent[]>>("/api/registry/agents"),
       apiRequest<ApiResponse<Tool[]>>("/api/registry/tools"),
       apiRequest<ApiResponse<Dependency[]>>("/api/registry/dependencies"),
@@ -129,7 +150,6 @@ export default function Home() {
     ]);
 
     const [
-      healthResult,
       agentsResult,
       toolsResult,
       dependenciesResult,
@@ -137,21 +157,6 @@ export default function Home() {
       policiesResult,
       reviewsResult,
     ] = results;
-
-    if (healthResult.status === "fulfilled") {
-      setConnection({
-        status: "connected",
-        health: healthResult.value,
-      });
-    } else {
-      setConnection({
-        status: "disconnected",
-        message:
-          healthResult.reason instanceof ApiError
-            ? healthResult.reason.message
-            : "Could not reach the backend health endpoint.",
-      });
-    }
 
     const failed = results.filter(
       (result) => result.status === "rejected",
@@ -298,6 +303,29 @@ const cards = [
         }
       : connection;
 
+  if (loading && !data) {
+    return (
+      <main className="flex min-h-[calc(100vh-160px)] items-center justify-center">
+        <section
+          aria-live="polite"
+          className="w-full max-w-md rounded-sm border border-[var(--border)] bg-[var(--surface)] p-8 text-center shadow-sm"
+        >
+          <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-[var(--surface-secondary)]">
+            <LoaderCircle className="size-6 animate-spin text-[var(--muted-foreground)]" />
+          </div>
+          <h1 className="mt-5 text-lg font-semibold">
+            Connecting to Reach.online…
+          </h1>
+          <p className="mt-2 text-sm leading-6 text-[var(--muted-foreground)]">
+            {connection.status === "checking"
+              ? connection.message
+              : "Backend connected. Loading your workspace…"}
+          </p>
+        </section>
+      </main>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-[1200px] space-y-8">
       {/* Overview hero: heading, refresh and backend status appear once */}
@@ -306,6 +334,22 @@ const cards = [
   loading={loading}
   onRefresh={() => void loadDashboard()}
 />
+
+{connection.status === "disconnected" && (
+  <div className="flex flex-col items-start justify-between gap-3 rounded-sm border border-red-500/30 bg-red-500/5 p-4 text-sm sm:flex-row sm:items-center">
+    <div className="flex items-start gap-2 text-red-700 dark:text-red-300">
+      <AlertCircle className="mt-0.5 size-4 shrink-0" />
+      <span>{connection.message}</span>
+    </div>
+    <button
+      type="button"
+      onClick={() => void loadDashboard()}
+      className="rounded-sm border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-sm font-medium hover:bg-[var(--surface-hover)]"
+    >
+      Retry
+    </button>
+  </div>
+)}
 
       {error && (
         <div
@@ -487,7 +531,7 @@ const cards = [
     {connection.status === "checking" && (
       <span className="flex items-center gap-2 text-sm text-[var(--muted)]">
         <LoaderCircle className="size-4 shrink-0 animate-spin" />
-        Checking backend connection…
+        {connection.message}
       </span>
     )}
 
