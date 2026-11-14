@@ -11,7 +11,7 @@ import {
   ShieldCheck,
   LoaderCircle,
   CheckCircle2,
-  // RefreshCw,
+  RefreshCw,
   Activity,
   Wrench,
 } from "lucide-react";
@@ -74,28 +74,54 @@ function DashboardLoadingBar({
 }: {
   connection: ConnectionState;
 }) {
+  const [showRefresh, setShowRefresh] = useState(false);
+
+  useEffect(() => {
+    const refreshPromptTimeout = window.setTimeout(() => {
+      setShowRefresh(true);
+    }, 80_000);
+
+    return () => window.clearTimeout(refreshPromptTimeout);
+  }, []);
+
   return (
     <div
       role="status"
       aria-live="polite"
-      className="fixed inset-x-4 bottom-4 z-50 mx-auto max-w-xl overflow-hidden rounded-sm border border-[var(--border)] bg-[var(--surface)] shadow-lg shadow-black/10 dark:shadow-black/30 sm:inset-x-auto sm:w-[min(100%-2rem,34rem)]"
+      className="fixed inset-x-4 bottom-4 z-50 mx-auto max-w-xl overflow-hidden rounded-sm border border-[var(--border)] bg-[var(--surface)] shadow-lg shadow-black/10 dark:shadow-black/30 sm:inset-x-auto sm:w-[min(calc(100vw-2rem),40rem)]"
     >
       <div className="h-0.5 w-full overflow-hidden bg-[var(--surface-secondary)]">
         <div className="h-full w-1/3 animate-[reach-loading_1.8s_ease-in-out_infinite] bg-[#F07870]" />
       </div>
-      <div className="flex items-center gap-3 px-4 py-3">
+      <div className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center">
         <LoaderCircle
           aria-hidden="true"
           className="size-4 shrink-0 animate-spin text-[#d95f68]"
         />
-        <div className="min-w-0">
-          <p className="text-sm font-medium">Preparing your workspace</p>
-          <p className="truncate text-xs text-[var(--muted-foreground)]">
-            {connection.status === "checking"
-              ? connection.message
-              : "Backend connected. Loading your latest data…"}
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-medium">
+            {showRefresh
+              ? "The connection is taking longer than expected"
+              : "Preparing your workspace"}
+          </p>
+          <p className="text-xs text-[var(--muted-foreground)]">
+            {showRefresh
+              ? "Refresh the browser to try reconnecting to the backend."
+              : connection.status === "checking"
+                ? connection.message
+                : "Backend connected. Loading your latest data…"}
           </p>
         </div>
+        {showRefresh && (
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="inline-flex shrink-0 animate-bounce items-center justify-center gap-2 rounded-sm bg-[#d95f68] px-3 py-2 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-[#c84f59] focus-visible:outline-white"
+          >
+            <RefreshCw aria-hidden="true" className="size-3.5" />
+            Refresh browser
+          </button>
+        )}
       </div>
     </div>
   );
