@@ -2,6 +2,13 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+
+.workspace-demo-button {
+  border: 1px solid color-mix(in srgb, var(--danger) 42%, var(--border));
+  border-left: 4px solid color-mix(in srgb, var(--danger) 72%, var(--surface));
+  transition: border-color 300ms ease, background-color 300ms ease;
+}
+
 :root {
   color-scheme: light;
 

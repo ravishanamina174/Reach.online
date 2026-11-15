@@ -75,7 +75,7 @@ function WorkspaceSelection({
           <button
             type="button"
             onClick={() => onSelect("demo")}
-            className="rounded-sm border border-[var(--border)] bg-[var(--surface)] p-5 text-left transition-colors hover:bg-[var(--surface-hover)]"
+            className="workspace-demo-button rounded-sm bg-[var(--surface)] p-5 text-left hover:bg-[var(--surface-hover)]"
           >
             <p className="text-sm font-semibold">See Demo Page</p>
             <p className="mt-2 text-xs leading-5 text-[var(--muted-foreground)]">
