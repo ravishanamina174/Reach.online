@@ -27,20 +27,20 @@ export const metadata: Metadata = {
   description:
     "Govern AI agent tool contracts, analyze dependency impact, and review release readiness.",
   applicationName: "Reach.Online",
-  icons: {
-    icon: [
-      {
-        url: "/icon-light.png",
-        media: "(prefers-color-scheme: light)",
-        type: "image/png",
-      },
-      {
-        url: "/icon-dark.png",
-        media: "(prefers-color-scheme: dark)",
-        type: "image/png",
-      },
-    ],
-  },
+  // icons: {
+  //   icon: [
+  //     {
+  //       url: "/icon-light.png",
+  //       media: "(prefers-color-scheme: light)",
+  //       type: "image/png",
+  //     },
+  //     {
+  //       url: "/icon-dark.png",
+  //       media: "(prefers-color-scheme: dark)",
+  //       type: "image/png",
+  //     },
+  //   ],
+  // },
 };
 
 export const viewport: Viewport = {
